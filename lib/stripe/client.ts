@@ -10,7 +10,11 @@ import type { StripeConfig } from "./config";
  */
 let cached: { key: string; client: Stripe } | null = null;
 
-export function getStripeClient(config: StripeConfig): Stripe {
+/**
+ * Takes only the secret key, not the whole `StripeConfig`: webhook receipt
+ * needs a client but has no business requiring the price ids to be present.
+ */
+export function getStripeClient(config: Pick<StripeConfig, "secretKey">): Stripe {
   if (cached?.key === config.secretKey) return cached.client;
   const client = new Stripe(config.secretKey, {
     typescript: true,

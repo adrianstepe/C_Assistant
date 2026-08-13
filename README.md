@@ -157,15 +157,37 @@ button that went nowhere would undo the credibility the demo just earned.
 `subscription` mode — Stripe puts a one-time price on the first invoice, which
 is exactly this arrangement. Amounts and copy live in `lib/pricing.ts`.
 
-**To switch it on**, create one Stripe product with two prices (£149 one-off,
-£79 recurring monthly) and set `STRIPE_SECRET_KEY`, `STRIPE_PRICE_SETUP` and
-`STRIPE_PRICE_MONTHLY`. Use `sk_test_…` until you mean it. Without all three,
-checkout falls back to dev-preview locally and is disabled in production.
+**To switch it on**, create two Stripe products — "AI Quote Assistant — Setup"
+(£149 one-off) and "AI Quote Assistant — Monthly" (£79/month) — and set
+`STRIPE_SECRET_KEY`, `STRIPE_PRICE_SETUP` and `STRIPE_PRICE_MONTHLY`. Use
+`sk_test_…` until you mean it. Without all three, checkout falls back to
+dev-preview locally and is disabled in production.
 
-**No webhook handler exists**, because nothing is persisted. The success page
-verifies payment by retrieving the session server-side, which is adequate while
-there are no orders to record. Add a webhook — and `STRIPE_WEBHOOK_SECRET` —
-before you rely on knowing about renewals, failed payments or cancellations.
+### Webhook (`/api/stripe/webhook`)
+
+Verifies the signature, translates the event into an `OrderEvent`
+(`lib/stripe/webhook.ts`) and hands it to `record` in
+`lib/integrations/order-events.ts`. Subscribe the destination to six events:
+`checkout.session.completed`, `checkout.session.expired`, `invoice.paid`,
+`invoice.payment_failed`, `customer.subscription.updated` and
+`customer.subscription.deleted`.
+
+Payloads are serialised at the account's API version, not the SDK's, and fields
+move between versions — `invoice.subscription` became
+`invoice.parent.subscription_details.subscription` in basil, which is what the
+code above reads. Aim to match the SDK's pinned **2026-07-29.dahlia**:
+
+- Locally, `stripe listen --latest` renders events at the newest version.
+- The account default is only changeable in **live** mode, so in test mode set
+  `api_version` on the destination itself (`POST /v1/webhook_endpoints`) rather
+  than trying to move the account.
+
+**`record` currently only logs.** Orders are still not persisted anywhere, so
+the log line is the record. It is the single seam: when orders need a database,
+or a failed payment needs to reach a human inbox, that function changes and
+nothing upstream of it does. A real implementation must also de-duplicate on
+`eventId` (Stripe retries, and can deliver twice anyway) and must not assume
+events arrive in the order they occurred.
 
 **The onboarding form does not save anywhere.** It validates, then hands the
 customer their answers with a prefilled email and a copy button, and says so
