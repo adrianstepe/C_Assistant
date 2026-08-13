@@ -1,0 +1,34 @@
+import type { Metadata } from "next";
+import { QuoteAssistantDemo } from "@/components/demo/QuoteAssistantDemo";
+import { Container } from "@/components/marketing/primitives";
+
+export const metadata: Metadata = {
+  title: "Try the quote assistant",
+  description:
+    "Send a cleaning enquiry the way one of your customers would, and watch it turn into a structured, qualified lead.",
+};
+
+export default function DemoPage() {
+  return (
+    <Container className="py-12 sm:py-16">
+      <div className="max-w-2xl">
+        <p className="text-xs font-semibold tracking-[0.14em] text-brand uppercase">
+          Live demo
+        </p>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-balance text-ink sm:text-4xl lg:text-[2.75rem]">
+          Try it as if you were the customer.
+        </h1>
+        <p className="text-slate-body mt-5 text-lg leading-relaxed text-pretty">
+          You are playing the part of someone enquiring about cleaning. The
+          assistant is answering on behalf of a cleaning company — in real use,
+          that would be yours. Answer however you like; it copes with whatever
+          you type.
+        </p>
+      </div>
+
+      <div className="mt-10">
+        <QuoteAssistantDemo />
+      </div>
+    </Container>
+  );
+}
