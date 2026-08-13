@@ -12,14 +12,15 @@
 
 /** Server-only variables. Never import these into a client component. */
 export type ServerEnvVar =
-  | "ANTHROPIC_API_KEY"
-  | "ANTHROPIC_MODEL"
   | "STRIPE_SECRET_KEY"
   | "STRIPE_PRICE_SETUP"
   | "STRIPE_PRICE_MONTHLY"
   | "STRIPE_WEBHOOK_SECRET"
   | "ADMIN_USERNAME"
-  | "ADMIN_PASSWORD";
+  | "ADMIN_PASSWORD"
+  | "DEEPSEEK_API_KEY"
+  | "DEEPSEEK_MODEL"
+  | "DEEPSEEK_BASE_URL";
 
 /**
  * Reads a server variable, throwing if it is absent or blank.

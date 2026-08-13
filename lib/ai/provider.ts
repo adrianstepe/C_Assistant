@@ -1,14 +1,17 @@
 import type { AssistantProvider } from "./types";
 import { createDemoEngine } from "./demo-engine";
+import { createRemoteProvider } from "./remote-provider";
 
 /**
  * The single place the assistant implementation is chosen.
  *
- * To move the demo onto a real model: write a provider that calls a route
- * handler (which in turn calls Anthropic server-side, reading the key through
- * `lib/env.ts`), then return it from here. Nothing in `components/demo`
- * imports a concrete engine, so the UI does not change.
+ * `useModel` is decided on the server (see `isAssistantModelEnabled` in
+ * `lib/ai/deepseek.ts`) and passed down as a boolean, because the component
+ * calling this runs in the browser and must never see the API key or its
+ * absence inferred from anything sensitive.
  */
-export function getAssistantProvider(): AssistantProvider {
-  return createDemoEngine();
+export function getAssistantProvider(
+  options: { useModel?: boolean } = {},
+): AssistantProvider {
+  return options.useModel ? createRemoteProvider() : createDemoEngine();
 }

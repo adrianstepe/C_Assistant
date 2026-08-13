@@ -25,10 +25,11 @@ interface LastRequest {
   contact?: ContactDetails;
 }
 
-export function QuoteAssistantDemo() {
+export function QuoteAssistantDemo({ useModel = false }: { useModel?: boolean }) {
   // One provider for the life of the component. Swapping engines happens in
-  // `getAssistantProvider`, not here.
-  const provider = useMemo(() => getAssistantProvider(), []);
+  // `getAssistantProvider`, not here. `useModel` is resolved on the server so
+  // no credential or its absence is inferable from the client bundle.
+  const provider = useMemo(() => getAssistantProvider({ useModel }), [useModel]);
 
   // Greeting is synchronous, so the first render is already a conversation —
   // no effect, no empty state, nothing to hydrate around.

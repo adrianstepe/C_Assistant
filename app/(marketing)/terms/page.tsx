@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BRAND } from "@/lib/marketing/brand";
+import { BRAND, HAS_REGISTRATION_DETAILS } from "@/lib/marketing/brand";
 import {
   MONTHLY_FEE_LABEL,
   PRODUCT_NAME,
@@ -24,12 +24,13 @@ export const metadata: Metadata = {
  *  - Refund position on the setup fee. Left deliberately open below; the
  *    current wording promises nothing and invites contact, which is honest but
  *    is not a policy.
- *  - Governing law and jurisdiction, which depend on where the business is
- *    established.
- *  - Full registered entity name and address, if trading through a company.
+ *  - Registered address and registration number (`lib/marketing/brand.ts`).
  *  - VAT treatment of these sales (see `lib/pricing.ts`), which affects whether
  *    the stated prices are the amount a customer actually pays.
  *  - Whether a formal cancellation notice period applies.
+ *
+ * Governing law is stated as Latvia, matching the country of establishment.
+ * Confirm this is what you want for UK business customers before trading.
  */
 
 const LAST_REVIEWED = "August 2026";
@@ -62,9 +63,18 @@ export default function TermsPage() {
           Last reviewed: {LAST_REVIEWED}
         </p>
         <p className="text-slate-body mt-5 text-lg leading-relaxed text-pretty">
-          These terms cover the {PRODUCT_NAME} supplied by {BRAND.legalEntity}.
-          They describe the service as it is actually offered today.
+          These terms cover the {PRODUCT_NAME} supplied by {BRAND.legalEntity}, a
+          company registered in {BRAND.jurisdiction}. They describe the service
+          as it is actually offered today.
         </p>
+
+        {!HAS_REGISTRATION_DETAILS ? (
+          <p className="mt-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <strong className="font-semibold">Incomplete.</strong> Our registered
+            address and company registration number are still to be added here.
+            Email {BRAND.contactEmail} for our full company details.
+          </p>
+        ) : null}
       </div>
 
       <div className="max-w-2xl">
@@ -170,6 +180,42 @@ export default function TermsPage() {
             configured to give on your behalf, and for how you use the enquiries
             it passes to you — including complying with data protection law when
             you contact the people who made them.
+          </p>
+        </Section>
+
+        <Section heading="Data protection">
+          <p>
+            Enquiries the assistant collects on your website are your data. You
+            are the controller and we act as your processor. Article 28 of the
+            GDPR requires a written data processing agreement between us before
+            that processing begins — ask for ours at{" "}
+            <a
+              href={`mailto:${BRAND.contactEmail}`}
+              className="rounded-md font-medium text-brand underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            >
+              {BRAND.contactEmail}
+            </a>
+            .
+          </p>
+          <p>
+            How we handle personal data, including processing outside the EEA,
+            is set out in our{" "}
+            <Link
+              href="/privacy"
+              className="rounded-md font-medium text-brand underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            >
+              privacy notice
+            </Link>
+            . Read section 5 before going live.
+          </p>
+        </Section>
+
+        <Section heading="Governing law">
+          <p>
+            These terms are governed by the law of {BRAND.jurisdiction}, and the
+            courts of {BRAND.jurisdiction} have jurisdiction over any dispute.
+            Nothing in these terms removes any mandatory legal protection
+            available to you in your own country.
           </p>
         </Section>
 

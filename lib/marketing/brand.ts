@@ -13,16 +13,27 @@ export const BRAND = {
   /** Monitored mailbox for all public contact and fallback routes. */
   contactEmail: "adrians@stepedigital.com",
   /**
-   * Name used in the footer copyright and as the data controller on the
-   * privacy page.
-   *
-   * REVIEW BEFORE LAUNCH: if the business trades through a registered company,
-   * this should be the full registered name, and the privacy and terms pages
-   * need the registered address and company number adding. Left as the trading
-   * name here rather than guessing at registration details.
+   * Registered company. Used in the footer copyright and named as the data
+   * controller on the privacy page.
    */
-  legalEntity: "Stepe Digital",
+  legalEntity: "Stepe Digital SIA",
+  /** Country of establishment. Determines the lead supervisory authority. */
+  jurisdiction: "Latvia",
+  /**
+   * Registered address and company registration number.
+   *
+   * REVIEW BEFORE LAUNCH: both are legally required in a GDPR privacy notice
+   * (Art. 13(1)(a)) and expected in terms of business. Left empty rather than
+   * guessed — the privacy and terms pages render a visible "to be confirmed"
+   * marker while these are blank, so an incomplete notice cannot go unnoticed.
+   */
+  registeredAddress: "",
+  registrationNumber: "",
 } as const;
+
+/** True once the company details required by the legal pages are filled in. */
+export const HAS_REGISTRATION_DETAILS =
+  BRAND.registeredAddress !== "" && BRAND.registrationNumber !== "";
 
 export interface NavLink {
   href: string;

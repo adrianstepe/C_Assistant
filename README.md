@@ -118,11 +118,32 @@ property type, location, size, frequency, preferred time, current arrangement
 and requirements, then contact details, and produces a CRM-style qualified
 lead with the JSON an integration would receive.
 
-**It is not an LLM.** `lib/ai/demo-engine.ts` is a deterministic engine behind
-the `AssistantProvider` interface. It reads as intelligent because it extracts
-several answers from one sentence and never asks what it already knows — but
-say "deterministic engine", not "AI", when describing it to anyone who will
-check. Swapping in a real model is a one-line change in `lib/ai/provider.ts`.
+### How the model fits in
+
+Set `DEEPSEEK_API_KEY` and `DEEPSEEK_MODEL` and the demo routes through
+`/api/assistant`, which calls DeepSeek. Leave them unset and it runs entirely on
+the deterministic engine in `lib/ai/demo-engine.ts`. Both work.
+
+**The model does not drive the conversation.** It may *propose* what the
+customer just said and suggest wording; every proposed value is normalised
+through the same parser the offline engine uses, and the offline engine decides
+what to ask next and when the enquiry is complete. Three reasons that split
+matters:
+
+- The flow always terminates.
+- Text injected through the chat box cannot skip to "complete" or fabricate a lead.
+- When the model is slow, broken, over budget or switched off, the endpoint still
+  returns a sensible reply. Verified by pointing `DEEPSEEK_BASE_URL` at an
+  unreachable host: the visitor sees a normal reply, the failure is logged
+  server-side only.
+
+Do not "simplify" this by letting the model return the whole `AssistantReply`.
+
+**Rate limiting** lives in `lib/rate-limit.ts`: 10/min and 60/hr per IP, plus a
+global daily ceiling. The per-IP counters are in-memory and therefore per
+serverless instance — they raise the cost of abuse rather than capping it. The
+global ceiling is the actual protection for the API bill. Read the comment at
+the top of that file before relying on it.
 
 Suggested-answer chips are load-bearing: they let a prospect finish the whole
 flow in about six taps on a phone. Removing them costs completions.
@@ -272,6 +293,7 @@ Deploys to Vercel with no extra configuration. Before the first deploy, set:
 | `NEXT_PUBLIC_SITE_URL` | **Required.** The real public URL, no trailing slash. |
 | `ADMIN_USERNAME`, `ADMIN_PASSWORD` | Otherwise `/admin` returns 503. |
 | `STRIPE_SECRET_KEY`, `STRIPE_PRICE_SETUP`, `STRIPE_PRICE_MONTHLY` | Otherwise checkout is disabled in production. |
+| `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL` | Optional. Without them the assistant runs offline. |
 
 `NEXT_PUBLIC_SITE_URL` matters more than it looks. Without it the app falls
 back to Vercel's deployment URL, and in local development to

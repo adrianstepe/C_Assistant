@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { QuoteAssistantDemo } from "@/components/demo/QuoteAssistantDemo";
 import { Container } from "@/components/marketing/primitives";
+import { isAssistantModelEnabled } from "@/lib/ai/deepseek";
 
 export const metadata: Metadata = {
   title: "Try the quote assistant",
@@ -8,7 +9,13 @@ export const metadata: Metadata = {
     "Send a cleaning enquiry the way one of your customers would, and watch it turn into a structured, qualified lead.",
 };
 
+// Whether the model is configured is a server-side fact, so this page cannot
+// be baked at build time.
+export const dynamic = "force-dynamic";
+
 export default function DemoPage() {
+  const useModel = isAssistantModelEnabled();
+
   return (
     <Container className="py-12 sm:py-16">
       <div className="max-w-2xl">
@@ -27,7 +34,7 @@ export default function DemoPage() {
       </div>
 
       <div className="mt-10">
-        <QuoteAssistantDemo />
+        <QuoteAssistantDemo useModel={useModel} />
       </div>
     </Container>
   );
