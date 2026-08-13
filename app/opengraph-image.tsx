@@ -1,9 +1,20 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { BRAND } from "@/lib/marketing/brand";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt = `${BRAND.name} — ${BRAND.tagline}`;
+
+/**
+ * The paper-coloured monogram, inlined as a data URI. Satori cannot resolve a
+ * bundler path or a relative URL, and reading the file at build time keeps the
+ * card free of any network fetch.
+ */
+const markSrc = `data:image/png;base64,${readFileSync(
+  join(process.cwd(), "components/marketing/sd-mark-paper.png"),
+).toString("base64")}`;
 
 /**
  * Social card, generated at build time by `next/og` (part of Next, no extra
@@ -25,37 +36,8 @@ export default function OpengraphImage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: 14,
-              background: "#ffffff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {/* Drawn rather than typed: a glyph would trigger a font fetch. */}
-            <svg width="34" height="34" viewBox="0 0 28 28">
-              <circle
-                cx="8"
-                cy="8"
-                r="2.3"
-                fill="none"
-                stroke="#c9950f"
-                strokeWidth="1.8"
-              />
-              <path
-                d="M9.5 17.5 13.25 21.25 21 12"
-                fill="none"
-                stroke="#c9950f"
-                strokeWidth="2.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={markSrc} width={68} height={43} alt="" />
           <div style={{ fontSize: 34, color: "#ffffff", fontWeight: 600 }}>
             {BRAND.name}
           </div>

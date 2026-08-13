@@ -1,43 +1,32 @@
+import Image from "next/image";
 import { BRAND } from "@/lib/marketing/brand";
+import mark from "./sd-mark.png";
 
 /**
- * Brand mark: a facilities tag - the punched-hole ticket clipped to a
- * completed job or a tested appliance, ticked off. Grounded in the trade
- * rather than abstract: no robot, no spark, nothing that dates the product.
+ * Brand mark: the SD monogram, set beside the company name.
+ *
+ * The mark is a fixed-colour raster, so `onDark` swaps the name's colour and
+ * seats the monogram on a paper chip rather than tinting it - an ink mark on an
+ * ink ground would simply disappear.
  */
 export function Wordmark({ onDark = false }: { onDark?: boolean }) {
   return (
     <span className="inline-flex items-center gap-2.5">
-      <svg
-        width="28"
-        height="28"
-        viewBox="0 0 28 28"
-        aria-hidden="true"
-        className="shrink-0"
+      <span
+        className={
+          onDark
+            ? "bg-paper flex h-7 items-center rounded-md px-1.5"
+            : "flex h-7 items-center"
+        }
       >
-        <rect
-          width="28"
-          height="28"
-          rx="7"
-          className={onDark ? "fill-white" : "fill-ink"}
+        <Image
+          src={mark}
+          alt=""
+          aria-hidden="true"
+          priority
+          className="h-4 w-auto"
         />
-        <circle
-          cx="8"
-          cy="8"
-          r="2.1"
-          fill="none"
-          strokeWidth="1.6"
-          className={onDark ? "stroke-ink" : "stroke-brand"}
-        />
-        <path
-          d="M9.5 17.5 13.25 21.25 21 12"
-          fill="none"
-          strokeWidth="2.25"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className={onDark ? "stroke-ink" : "stroke-brand"}
-        />
-      </svg>
+      </span>
       <span
         className={`font-display text-lg font-semibold tracking-tight ${
           onDark ? "text-white" : "text-ink"

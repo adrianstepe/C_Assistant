@@ -123,20 +123,6 @@ html {
 }
 
 /**
- * The one signature graphic on the site: a hazard-tape seam marking the
- * single transition that means something - the Problem section (cordoned
- * off) giving way to the Workflow section (resolved). Not reused elsewhere.
- */
-.hazard-seam {
-  height: 0.875rem;
-  background-image: repeating-linear-gradient(
-    135deg,
-    var(--color-ink) 0 18px,
-    var(--color-brand) 18px 36px
-  );
-}
-
-/**
  * A punched tear-line, as if a docket had been separated from a duplicate
  * pad. Sits along one edge of the hero lead card only.
  */
