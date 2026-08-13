@@ -17,7 +17,9 @@ export type ServerEnvVar =
   | "STRIPE_SECRET_KEY"
   | "STRIPE_PRICE_SETUP"
   | "STRIPE_PRICE_MONTHLY"
-  | "STRIPE_WEBHOOK_SECRET";
+  | "STRIPE_WEBHOOK_SECRET"
+  | "ADMIN_USERNAME"
+  | "ADMIN_PASSWORD";
 
 /**
  * Reads a server variable, throwing if it is absent or blank.
@@ -39,10 +41,45 @@ export function optionalServerEnv(name: ServerEnvVar): string | undefined {
   return value === undefined || value.trim() === "" ? undefined : value;
 }
 
+const DEV_FALLBACK_SITE_URL = "http://localhost:3000";
+
+function stripTrailingSlash(value: string): string {
+  return value.replace(/\/+$/, "");
+}
+
+/**
+ * The absolute base URL of this deployment, or `null` when it genuinely cannot
+ * be determined in production.
+ *
+ * Resolution order, and why:
+ *
+ * 1. `NEXT_PUBLIC_SITE_URL` — the canonical domain. Always set this in
+ *    production; nothing else knows which of several possible hosts is the one
+ *    you want indexed.
+ * 2. `NEXT_PUBLIC_VERCEL_URL` — the deployment host, supplied automatically by
+ *    Vercel. Not the canonical domain, but never *wrong* the way localhost is.
+ * 3. `http://localhost:3000` — development only.
+ *
+ * Returning `null` rather than falling back to localhost in production is the
+ * whole point: a canonical tag or a Stripe return URL pointing at localhost is
+ * worse than one that is absent, because it silently sends real customers and
+ * search engines nowhere.
+ */
+export function resolveSiteUrl(): string | null {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (configured) return stripTrailingSlash(configured);
+
+  const vercelUrl = process.env.NEXT_PUBLIC_VERCEL_URL?.trim();
+  if (vercelUrl) return `https://${stripTrailingSlash(vercelUrl)}`;
+
+  if (process.env.NODE_ENV === "production") return null;
+  return DEV_FALLBACK_SITE_URL;
+}
+
 /**
  * Values safe to expose to the browser. Referenced statically so Next.js can
  * inline them at build time.
  */
 export const publicEnv = {
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  siteUrl: resolveSiteUrl(),
 } as const;

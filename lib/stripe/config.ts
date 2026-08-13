@@ -1,4 +1,4 @@
-import { optionalServerEnv } from "@/lib/env";
+import { optionalServerEnv, resolveSiteUrl } from "@/lib/env";
 
 /**
  * Stripe configuration, read from the environment and nowhere else.
@@ -57,17 +57,23 @@ export function getCheckoutAvailability(): CheckoutAvailability {
 /**
  * Absolute origin for Stripe's return URLs.
  *
- * Prefers the configured site URL. Only falls back to request headers, which
- * a client controls, when nothing is configured — so a poisoned Host header
- * cannot redirect a paying customer somewhere else in a deployed environment.
+ * Prefers the configured site URL, then the deployment URL. Only falls back to
+ * request headers — which a client controls — when neither is available, so a
+ * poisoned Host header cannot redirect a paying customer somewhere else on a
+ * properly configured deployment.
+ *
+ * Returns `null` rather than guessing localhost: sending someone who has just
+ * paid to a URL that does not resolve is worse than declining to start
+ * checkout at all.
  */
-export async function siteOrigin(): Promise<string> {
-  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (configured) return configured.replace(/\/$/, "");
+export async function siteOrigin(): Promise<string | null> {
+  const resolved = resolveSiteUrl();
+  if (resolved) return resolved;
 
   const { headers } = await import("next/headers");
   const headerList = await headers();
   const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
-  const proto = headerList.get("x-forwarded-proto") ?? "http";
-  return host ? `${proto}://${host}` : "http://localhost:3000";
+  if (!host) return null;
+  const proto = headerList.get("x-forwarded-proto") ?? "https";
+  return `${proto}://${host}`;
 }

@@ -74,7 +74,7 @@ export default function OpengraphImage() {
               maxWidth: 820,
             }}
           >
-            Quote assistant for UK commercial cleaning companies.
+            {BRAND.tagline}
           </div>
         </div>
 

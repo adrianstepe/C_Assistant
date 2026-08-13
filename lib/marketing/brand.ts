@@ -1,16 +1,27 @@
 ﻿/**
- * Single source of truth for brand-level facts used across the marketing site.
+ * Single source of truth for brand-level facts used across the site.
  *
- * `name` and `contactEmail` are placeholders chosen during the build — change
- * them here and every page, the OG image and the metadata follow.
+ * The product is sold under the operator's own name rather than a separate
+ * product brand. Change these and every page, the OG card and the metadata
+ * follow.
  */
 export const BRAND = {
-  name: "Quoteline",
-  /** Used in the <title> template and the OG card. */
-  tagline: "Quote assistant for commercial cleaning companies",
-  /** TODO: point at a real, monitored mailbox before launch. */
-  contactEmail: "hello@quoteline.co.uk",
-  legalEntity: "Quoteline",
+  /** Shown in the wordmark, nav and title template. */
+  name: "Stepe Digital",
+  /** What is being sold. Used in the <title> and the OG card. */
+  tagline: "AI Quote Assistant for Commercial Cleaning Companies",
+  /** Monitored mailbox for all public contact and fallback routes. */
+  contactEmail: "adrians@stepedigital.com",
+  /**
+   * Name used in the footer copyright and as the data controller on the
+   * privacy page.
+   *
+   * REVIEW BEFORE LAUNCH: if the business trades through a registered company,
+   * this should be the full registered name, and the privacy and terms pages
+   * need the registered address and company number adding. Left as the trading
+   * name here rather than guessing at registration details.
+   */
+  legalEntity: "Stepe Digital",
 } as const;
 
 export interface NavLink {

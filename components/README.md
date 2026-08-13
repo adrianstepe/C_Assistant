@@ -7,7 +7,7 @@ React components, grouped by the area of the product they belong to.
 | `ui/`        | Small, generic, presentational building blocks. No domain knowledge.         |
 | `marketing/` | The public site: header, footer, landing sections, product preview. Built.   |
 | `demo/`      | The interactive quote assistant demo (conversation UI, enquiry summary).     |
-| `leads/`     | Internal lead inbox — lists, detail views, status controls.                  |
+| `checkout/`  | Pricing panel, checkout button and the post-purchase onboarding form.        |
 | `admin/`     | Internal outreach tracker (`/admin/leads`). Built; see the root README.      |
 
 Conventions:
@@ -17,8 +17,8 @@ Conventions:
 - Domain types come from `@/types`, never redeclared locally.
 - Every interactive element must be keyboard reachable and labelled.
 
-`demo/` and `leads/` are empty placeholders for now. `ui/` holds only
-`Field.tsx` (label + control pairing and the shared input styling).
+`ui/` holds the shared primitives (`Field.tsx`, `TypingDots.tsx`) used across
+the demo, checkout and admin areas.
 
 ## `marketing/`
 

@@ -76,5 +76,10 @@ export const PLAN_TERMS: readonly string[] = [
   `${MONTHLY_FEE_LABEL} per month starts at the same time and recurs monthly until you cancel.`,
   "Monthly rolling — there is no minimum term and no cancellation fee.",
   "Cancel whenever you like; the assistant keeps running until the end of the month you have paid for.",
-  "Prices exclude VAT.",
+  // REVIEW BEFORE LIVE CHARGING: neutral by design. The VAT treatment of these
+  // sales has not been confirmed and depends on where the business is
+  // established, its registration status and the customer's status. Do not
+  // replace this with a definite statement (in either direction) until that is
+  // settled — it is a factual tax claim customers rely on at the point of sale.
+  "Prices shown are subject to any applicable taxes.",
 ];

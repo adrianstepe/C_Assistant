@@ -29,12 +29,21 @@ export async function startCheckout(
     };
   }
 
-  const origin = await siteOrigin();
-
   // No Stripe credentials locally: skip to the success page so the rest of the
   // application can be worked on. Never reachable in production.
   if (availability.kind === "dev-preview") {
     redirect("/checkout/success?preview=1");
+  }
+
+  const origin = await siteOrigin();
+  if (!origin) {
+    console.error(
+      "[checkout] NEXT_PUBLIC_SITE_URL is not set and the request origin could not be determined; refusing to create a session with unusable return URLs.",
+    );
+    return {
+      error:
+        "Checkout isn't configured correctly on this deployment. Please email us and we'll take it from here.",
+    };
   }
 
   let checkoutUrl: string;

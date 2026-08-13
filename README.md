@@ -45,14 +45,13 @@ app/                    routes (App Router)
   (marketing)/          public site — supplies header, footer, <main>
     page.tsx            landing page
     demo/ privacy/ terms/
-  leads/                internal lead inbox placeholder
-  admin/leads/          prospect tracker (built)
+  admin/leads/          prospect tracker (built, password-protected)
   api/health/           liveness probe
   opengraph-image.tsx   social card, generated at build time
   layout.tsx            root layout, fonts, skip link, SEO metadata
   globals.css           Tailwind entry + design tokens
 components/             React components, grouped by product area
-  ui/ marketing/ demo/ leads/ admin/
+  ui/ marketing/ demo/ checkout/ admin/
 lib/                    framework-agnostic logic (no JSX)
   env.ts                typed env access — the only place secrets are read
   date.ts               ISO date helpers, anchored to Europe/London
@@ -70,25 +69,32 @@ hooks/                  shared client-side React hooks
 public/                 static assets
 ```
 
-`components/demo`, `components/leads`, `lib/assistant`, `lib/leads` and
-`lib/integrations` are empty placeholders. Each area has a `README.md`
-describing what belongs there.
+`lib/assistant`, `lib/leads` and `lib/integrations` are empty placeholders for
+work not yet started. Each area has a `README.md` describing what belongs there.
 
 Import alias: `@/*` maps to the project root, e.g. `import type { Lead } from "@/types"`.
 
 ## Public site (`/`)
 
-Routes: `/` (landing), `/demo`, `/privacy`, `/terms` — all inside the
-`app/(marketing)` route group, which supplies the header, footer and `<main>`.
+Routes: `/` (landing), `/demo`, `/pricing`, `/privacy`, `/terms`,
+`/checkout/*` — all inside the `app/(marketing)` route group, which supplies the
+header, footer and `<main>`.
 
-**Before launch**, three things must change:
+**Identity** lives entirely in `lib/marketing/brand.ts`: the name shown in the
+wordmark and titles, the tagline, and the contact address every fallback route
+uses. Changing it there updates the metadata, the OG card, the favicon-adjacent
+branding and every `mailto:` on the site.
 
-1. `BRAND.name` in `lib/marketing/brand.ts` is a placeholder ("Quoteline") and
-   `BRAND.contactEmail` points at a domain that does not exist. Both are used by
-   the metadata, the OG card and every contact link.
-2. `NEXT_PUBLIC_SITE_URL` must be set, or `og:url` and the canonical link will
-   point at `localhost:3000`.
-3. `/privacy` and `/terms` are placeholders and are `noindex` until written.
+**Still needing a factual decision before live trading** — each is marked with a
+`REVIEW BEFORE LAUNCH` comment in the file concerned:
+
+1. `BRAND.legalEntity` is the trading name. If the business trades through a
+   registered company, the registered name, address and number belong on
+   `/privacy` and `/terms`.
+2. VAT treatment of these sales (`lib/pricing.ts`). The copy is deliberately
+   neutral until this is confirmed.
+3. The refund position on the setup fee (`/terms`). Currently states there is no
+   fixed policy and invites contact, which is honest but is not a policy.
 
 **Theming.** The marketing palette (`--color-ink`, `--color-brand`, …) is fixed,
 not theme-aware — the public site should look the same to everyone. Dark mode is
@@ -147,10 +153,14 @@ plainly. Replacing that with a real submission is a contained change to
 
 Two things to decide before taking real money:
 
-- `PLAN_TERMS` states prices exclude VAT. Confirm that matches your VAT
-  position and pricing intent.
-- `/terms` is still a placeholder. It is linked from the footer and is where a
-  customer would expect refund and cancellation detail to live.
+- **VAT.** `PLAN_TERMS` in `lib/pricing.ts` says only "Prices shown are subject
+  to any applicable taxes." That is deliberately neutral: the treatment of these
+  sales has not been confirmed and depends on where the business is established,
+  its registration status and the customer's status. Do not replace it with a
+  definite statement in either direction until that is settled — it is a factual
+  tax claim a customer relies on at the point of sale.
+- **Refunds.** `/terms` states there is no fixed policy yet and invites contact.
+  Honest, but it is not a policy, and it should become one.
 
 ## Internal: prospect tracker (`/admin/leads`)
 
@@ -220,6 +230,56 @@ cp .env.example .env.local
 | `npm run check`     | Typecheck then lint                            |
 | `npm run build`     | Production build                               |
 | `npm start`         | Serve the production build                     |
+
+## Admin access (`/admin/*`)
+
+The prospect tracker is protected by HTTP Basic authentication, implemented in
+[`proxy.ts`](proxy.ts) at the project root. Next 16 deprecated the
+`middleware.ts` filename in favour of `proxy.ts`; the build warns if the old
+name is used.
+
+Set two variables, locally in `.env.local` and on Vercel under **Project
+Settings → Environment Variables**:
+
+```
+ADMIN_USERNAME=someone
+ADMIN_PASSWORD=<long random string>
+```
+
+Behaviour:
+
+| Situation | Result |
+| --- | --- |
+| Both set, correct credentials | Access granted |
+| Both set, wrong or missing credentials | `401` with a browser password prompt |
+| Either variable missing | `503`, area stays locked |
+
+**It fails closed.** A deploy that forgets the variables loses access to the
+tool; it does not expose the prospect list. Do not "fix" that by adding a
+fallback default.
+
+Basic auth transmits credentials base64-encoded, not encrypted, so this is only
+safe because Vercel terminates TLS. Do not serve the admin area over plain
+HTTP. This is deliberately the smallest thing that works for a single
+operator — it is not a user system, and it does not scale to a team.
+
+## Deployment
+
+Deploys to Vercel with no extra configuration. Before the first deploy, set:
+
+| Variable | Why |
+| --- | --- |
+| `NEXT_PUBLIC_SITE_URL` | **Required.** The real public URL, no trailing slash. |
+| `ADMIN_USERNAME`, `ADMIN_PASSWORD` | Otherwise `/admin` returns 503. |
+| `STRIPE_SECRET_KEY`, `STRIPE_PRICE_SETUP`, `STRIPE_PRICE_MONTHLY` | Otherwise checkout is disabled in production. |
+
+`NEXT_PUBLIC_SITE_URL` matters more than it looks. Without it the app falls
+back to Vercel's deployment URL, and in local development to
+`http://localhost:3000`. It will **never** emit a localhost URL in production —
+it omits the canonical tag and refuses to create a Stripe session rather than
+sending a paying customer somewhere that does not resolve. That is the correct
+behaviour, but it means a missing variable degrades checkout rather than
+silently half-working.
 
 ## Environment variables
 

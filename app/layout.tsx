@@ -14,8 +14,26 @@ const inter = Inter({
 const description =
   "A quote assistant for UK commercial cleaning companies. It answers website enquiries in seconds, asks the questions a price depends on, and sends your team a structured, qualified lead.";
 
+const { siteUrl } = publicEnv;
+
+/**
+ * Absolute-URL metadata is emitted only when the site URL is actually known.
+ *
+ * Without `metadataBase`, Next resolves relative values like `canonical: "/"`
+ * against `http://localhost:3000` — so leaving them in while omitting the base
+ * would publish a localhost canonical rather than none at all. Both are
+ * therefore gated on the same condition.
+ */
+const absoluteUrlMetadata: Metadata = siteUrl
+  ? {
+      metadataBase: new URL(siteUrl),
+      alternates: { canonical: "/" },
+      openGraph: { url: "/" },
+    }
+  : {};
+
 export const metadata: Metadata = {
-  metadataBase: new URL(publicEnv.siteUrl),
+  ...absoluteUrlMetadata,
   title: {
     default: `${BRAND.name} — ${BRAND.tagline}`,
     template: `%s | ${BRAND.name}`,
@@ -29,12 +47,11 @@ export const metadata: Metadata = {
     "lead qualification for cleaning companies",
     "UK commercial cleaning",
   ],
-  alternates: { canonical: "/" },
   openGraph: {
+    ...absoluteUrlMetadata.openGraph,
     type: "website",
     siteName: BRAND.name,
     locale: "en_GB",
-    url: "/",
     title: `${BRAND.name} — ${BRAND.tagline}`,
     description,
   },
