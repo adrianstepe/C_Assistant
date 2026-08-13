@@ -10,28 +10,40 @@ import { HERO_LEAD } from "@/lib/marketing/preview-script";
 export function LeadCard() {
   return (
     <div className="relative">
-      {/* Suggestion of a stack behind, without tilting anything. */}
+      {/* Suggestion of a duplicate pad behind, without tilting anything. */}
       <div
         aria-hidden="true"
-        className="border-hairline absolute -top-3 right-3 left-3 h-full rounded-2xl border bg-white/60"
+        className="border-hairline absolute -top-3 right-3 left-3 h-full rounded-lg border bg-white/60"
       />
       <div
         aria-hidden="true"
-        className="border-hairline absolute -top-1.5 right-1.5 left-1.5 h-full rounded-2xl border bg-white/80"
+        className="border-hairline absolute -top-1.5 right-1.5 left-1.5 h-full rounded-lg border bg-white/80"
       />
 
-      <article className="border-hairline relative rounded-2xl border bg-white shadow-xl shadow-ink/[0.07]">
+      <article className="border-hairline relative rounded-lg border bg-white shadow-xl shadow-ink/[0.07]">
+        {/* A tear-line, as if this docket had been pulled from the pad. */}
+        <div aria-hidden="true" className="docket-tear h-2.5" />
+
         <header className="border-hairline flex items-start justify-between gap-3 border-b px-5 py-4">
           <div>
-            <h3 className="text-sm font-semibold text-ink">
+            <h3 className="font-display text-base font-semibold text-ink">
               New qualified lead
             </h3>
-            <p className="text-slate-body mt-0.5 text-xs">
+            <p className="text-slate-body mt-0.5 font-mono text-xs">
               {HERO_LEAD.reference} · {HERO_LEAD.receivedAt}
             </p>
           </div>
-          <span className="bg-brand-tint inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-brand-dark">
-            <span className="size-1.5 rounded-full bg-brand" aria-hidden="true" />
+          <span className="bg-clear-tint text-clear inline-flex shrink-0 items-center gap-1.5 px-2.5 py-1 text-xs font-semibold">
+            <svg width="10" height="10" viewBox="0 0 12 12" aria-hidden="true">
+              <path
+                d="M2 6.5 4.75 9.25 10 3"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
             Qualified
           </span>
         </header>
@@ -48,7 +60,7 @@ export function LeadCard() {
                 key={field.label}
                 className="border-hairline/70 flex items-baseline justify-between gap-4 border-t py-2.5 first:border-t-0 first:pt-0"
               >
-                <dt className="text-slate-body shrink-0 text-xs font-medium tracking-wide uppercase">
+                <dt className="text-slate-body shrink-0 font-mono text-xs tracking-wide uppercase">
                   {field.label}
                 </dt>
                 <dd className="text-right text-sm font-medium text-ink">
@@ -63,10 +75,10 @@ export function LeadCard() {
           aria-hidden="true"
           className="border-hairline flex gap-2 border-t px-5 py-3.5"
         >
-          <span className="flex-1 rounded-lg bg-brand px-3 py-2 text-center text-xs font-semibold text-white">
+          <span className="bg-brand flex-1 rounded-md px-3 py-2 text-center text-xs font-semibold text-ink">
             Send quote
           </span>
-          <span className="border-hairline text-slate-body flex-1 rounded-lg border px-3 py-2 text-center text-xs font-semibold">
+          <span className="border-hairline text-slate-body flex-1 rounded-md border px-3 py-2 text-center text-xs font-semibold">
             Read conversation
           </span>
         </div>

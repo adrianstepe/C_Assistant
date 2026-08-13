@@ -25,7 +25,7 @@ export function ProblemSection() {
                 <div className="flex flex-col items-center">
                   <span
                     className={`mt-1.5 size-2.5 shrink-0 rounded-full ${
-                      entry.lost ? "bg-red-400" : "bg-white/35"
+                      entry.lost ? "bg-fault" : "bg-white/35"
                     }`}
                     aria-hidden="true"
                   />
@@ -43,7 +43,9 @@ export function ProblemSection() {
                   </p>
                   <p
                     className={`mt-1.5 text-base leading-relaxed text-pretty sm:text-lg ${
-                      entry.lost ? "font-medium text-red-300" : "text-white/85"
+                      entry.lost
+                        ? "font-medium text-[#e2957f]"
+                        : "text-white/85"
                     }`}
                   >
                     {entry.event}
@@ -55,7 +57,7 @@ export function ProblemSection() {
         </ol>
 
         <p className="mt-10 max-w-2xl border-l-2 border-white/20 pl-5 text-base text-white/60 sm:text-lg">
-          Nothing went wrong. Nobody was careless. Everyone was just busy — and
+          Nothing went wrong. Nobody was careless. Everyone was just busy, and
           the enquiry still went to whoever answered first.
         </p>
       </Container>

@@ -13,8 +13,8 @@ export function HowItWorksSection() {
 
         <ol className="mt-12 grid gap-6 sm:gap-8 md:grid-cols-3">
           {HOW_IT_WORKS.map((step) => (
-            <li key={step.number} className="border-hairline border-t pt-6">
-              <p className="font-mono text-sm font-medium text-brand">
+            <li key={step.number} className="border-brand border-t-2 pt-6">
+              <p className="text-slate-body font-mono text-sm font-medium">
                 {step.number}
               </p>
               <h3 className="mt-3 text-xl font-semibold tracking-tight text-ink">

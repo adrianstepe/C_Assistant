@@ -1,13 +1,34 @@
 import type { ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Barlow_Semi_Condensed, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { BRAND } from "@/lib/marketing/brand";
 import { publicEnv } from "@/lib/env";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-sans",
+/**
+ * Three roles, not one face doing everything: a condensed display face with a
+ * signage heritage for headlines, an operational sans for body copy, and a
+ * mono face for reference numbers and timestamps - see globals.css for how
+ * these bind to `font-sans` / `font-display` / `font-mono`.
+ */
+const display = Barlow_Semi_Condensed({
+  variable: "--font-display",
   subsets: ["latin"],
+  weight: ["600", "700"],
+  display: "swap",
+});
+
+const body = IBM_Plex_Sans({
+  variable: "--font-body",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  display: "swap",
+});
+
+const data = IBM_Plex_Mono({
+  variable: "--font-data",
+  subsets: ["latin"],
+  weight: ["400", "500"],
   display: "swap",
 });
 
@@ -35,7 +56,7 @@ const absoluteUrlMetadata: Metadata = siteUrl
 export const metadata: Metadata = {
   ...absoluteUrlMetadata,
   title: {
-    default: `${BRAND.name} — ${BRAND.tagline}`,
+    default: `${BRAND.name}: ${BRAND.tagline}`,
     template: `%s | ${BRAND.name}`,
   },
   description,
@@ -52,12 +73,12 @@ export const metadata: Metadata = {
     type: "website",
     siteName: BRAND.name,
     locale: "en_GB",
-    title: `${BRAND.name} — ${BRAND.tagline}`,
+    title: `${BRAND.name}: ${BRAND.tagline}`,
     description,
   },
   twitter: {
     card: "summary_large_image",
-    title: `${BRAND.name} — ${BRAND.tagline}`,
+    title: `${BRAND.name}: ${BRAND.tagline}`,
     description,
   },
 };
@@ -65,16 +86,19 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#ffffff",
+  themeColor: "#f1f3ee",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en-GB" className={`${inter.variable} h-full antialiased`}>
+    <html
+      lang="en-GB"
+      className={`${display.variable} ${body.variable} ${data.variable} h-full antialiased`}
+    >
       <body className="bg-background text-foreground flex min-h-full flex-col">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-ink focus:shadow-lg focus:outline-2 focus:outline-offset-2 focus:outline-brand"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-ink focus:shadow-lg focus:outline-2 focus:outline-offset-2 focus:outline-ink"
         >
           Skip to main content
         </a>

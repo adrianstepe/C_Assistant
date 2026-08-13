@@ -33,21 +33,35 @@
 }
 
 /**
- * Marketing palette.
+ * Marketing palette: site paperwork, not app chrome.
  *
  * Deliberately fixed rather than theme-aware: the public site should look the
  * same to every visitor. These are additive — the semantic tokens above still
  * drive the internal tracker, which does follow the OS theme.
+ *
+ * Grounded in how a real commercial cleaning contractor's premises actually
+ * communicate status: a red/amber/green inspection-tag system (scaffold tags,
+ * PAT-test tags), not one accent colour doing every job. `brand` is caution
+ * amber - the colour of a wet-floor sign, and the one every visitor already
+ * associates with this trade - and carries every interactive/CTA moment.
+ * `clear` is a separate, muted "all-clear" green reserved for status: a
+ * qualified lead, a completed step. `fault` is reserved for the one place
+ * something has genuinely gone wrong. Never blend these roles.
  */
 @theme {
-  --color-ink: #0b1524;
-  --color-ink-soft: #1d2a3c;
-  --color-slate-body: #4b5768;
-  --color-mist: #f6f8fa;
-  --color-hairline: #e3e7ed;
-  --color-brand: #0b7a6b;
-  --color-brand-dark: #075c50;
-  --color-brand-tint: #e6f2f0;
+  --color-ink: #15231f;
+  --color-ink-soft: #22342e;
+  --color-slate-body: #4a564e;
+  --color-paper: #f1f3ee;
+  --color-mist: #e9ece4;
+  --color-hairline: #d7ded2;
+  --color-brand: #f0b429;
+  --color-brand-dark: #c9950f;
+  --color-brand-tint: #fbeacb;
+  --color-clear: #2f6b52;
+  --color-clear-tint: #e4eee7;
+  --color-fault: #a8402f;
+  --color-fault-tint: #f3e3df;
 }
 
 @theme inline {
@@ -58,7 +72,9 @@
   --color-surface: var(--surface);
   --color-surface-hover: var(--surface-hover);
   --color-accent: var(--accent);
-  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), var(--font-body), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-data), ui-monospace, "SFMono-Regular", monospace;
 }
 
 html {
@@ -73,8 +89,8 @@ html {
 /* Faint engineering grid behind the hero, faded out at the edges. */
 .hero-grid {
   background-image:
-    linear-gradient(to right, rgba(11, 21, 36, 0.055) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(11, 21, 36, 0.055) 1px, transparent 1px);
+    linear-gradient(to right, rgba(21, 35, 31, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(21, 35, 31, 0.06) 1px, transparent 1px);
   background-size: 68px 68px;
   -webkit-mask-image: radial-gradient(
     ellipse 75% 65% at 50% 0%,
@@ -104,6 +120,35 @@ html {
     #000 30%,
     transparent 100%
   );
+}
+
+/**
+ * The one signature graphic on the site: a hazard-tape seam marking the
+ * single transition that means something - the Problem section (cordoned
+ * off) giving way to the Workflow section (resolved). Not reused elsewhere.
+ */
+.hazard-seam {
+  height: 0.875rem;
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--color-ink) 0 18px,
+    var(--color-brand) 18px 36px
+  );
+}
+
+/**
+ * A punched tear-line, as if a docket had been separated from a duplicate
+ * pad. Sits along one edge of the hero lead card only.
+ */
+.docket-tear {
+  background-image: radial-gradient(
+    circle,
+    var(--color-paper) 2.25px,
+    transparent 2.75px
+  );
+  background-size: 14px 100%;
+  background-position: top center;
+  background-repeat: repeat-x;
 }
 
 /* Product preview motion. All of it is disabled by the reduced-motion block. */

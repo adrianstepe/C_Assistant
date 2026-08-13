@@ -19,7 +19,7 @@ export default function OpengraphImage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "#0b1524",
+          background: "#15231f",
           padding: "72px 80px",
           fontFamily: "sans-serif",
         }}
@@ -29,7 +29,7 @@ export default function OpengraphImage() {
             style={{
               width: 56,
               height: 56,
-              borderRadius: 16,
+              borderRadius: 14,
               background: "#ffffff",
               display: "flex",
               alignItems: "center",
@@ -37,12 +37,20 @@ export default function OpengraphImage() {
             }}
           >
             {/* Drawn rather than typed: a glyph would trigger a font fetch. */}
-            <svg width="30" height="30" viewBox="0 0 24 24">
-              <path
-                d="M5 12.5 10 17.5 19 7"
+            <svg width="34" height="34" viewBox="0 0 28 28">
+              <circle
+                cx="8"
+                cy="8"
+                r="2.3"
                 fill="none"
-                stroke="#0b1524"
-                strokeWidth="2.75"
+                stroke="#c9950f"
+                strokeWidth="1.8"
+              />
+              <path
+                d="M9.5 17.5 13.25 21.25 21 12"
+                fill="none"
+                stroke="#c9950f"
+                strokeWidth="2.6"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
@@ -70,7 +78,7 @@ export default function OpengraphImage() {
             style={{
               marginTop: 28,
               fontSize: 30,
-              color: "#9fb0c4",
+              color: "#9fb0a3",
               maxWidth: 820,
             }}
           >
@@ -81,13 +89,12 @@ export default function OpengraphImage() {
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <div
             style={{
-              width: 12,
-              height: 12,
-              borderRadius: 6,
-              background: "#0b7a6b",
+              width: 14,
+              height: 14,
+              background: "#f0b429",
             }}
           />
-          <div style={{ fontSize: 24, color: "#7d8ea3" }}>
+          <div style={{ fontSize: 24, color: "#8ea298" }}>
             Enquiry, conversation, qualified lead
           </div>
         </div>

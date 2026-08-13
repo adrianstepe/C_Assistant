@@ -10,7 +10,7 @@ export function TypingDots({ tone = "muted" }: { tone?: "muted" | "light" }) {
         <span
           key={dot}
           className={`animate-typing-dot size-1.5 rounded-full ${
-            tone === "light" ? "bg-white/70" : "bg-slate-body"
+            tone === "light" ? "bg-white/70" : "bg-slate-body/70"
           }`}
           style={{ animationDelay: `${dot * 160}ms` }}
         />

@@ -12,6 +12,7 @@ export default function HomePage() {
     <>
       <Hero />
       <ProblemSection />
+      <div className="hazard-seam" aria-hidden="true" />
       <WorkflowSection />
       <PreviewSection />
       <BenefitsSection />

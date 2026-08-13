@@ -1,8 +1,9 @@
 import { BRAND } from "@/lib/marketing/brand";
 
 /**
- * Brand mark: an enclosed tick, for "enquiry handled". Deliberately abstract —
- * no robot, no spark, nothing that dates the product to a particular year.
+ * Brand mark: a facilities tag - the punched-hole ticket clipped to a
+ * completed job or a tested appliance, ticked off. Grounded in the trade
+ * rather than abstract: no robot, no spark, nothing that dates the product.
  */
 export function Wordmark({ onDark = false }: { onDark?: boolean }) {
   return (
@@ -17,20 +18,28 @@ export function Wordmark({ onDark = false }: { onDark?: boolean }) {
         <rect
           width="28"
           height="28"
-          rx="8"
+          rx="7"
           className={onDark ? "fill-white" : "fill-ink"}
         />
+        <circle
+          cx="8"
+          cy="8"
+          r="2.1"
+          fill="none"
+          strokeWidth="1.6"
+          className={onDark ? "stroke-ink" : "stroke-brand"}
+        />
         <path
-          d="M8.5 14.5 12.25 18.25 19.5 10.5"
+          d="M9.5 17.5 13.25 21.25 21 12"
           fill="none"
           strokeWidth="2.25"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className={onDark ? "stroke-ink" : "stroke-white"}
+          className={onDark ? "stroke-ink" : "stroke-brand"}
         />
       </svg>
       <span
-        className={`text-[1.0625rem] font-semibold tracking-tight ${
+        className={`font-display text-lg font-semibold tracking-tight ${
           onDark ? "text-white" : "text-ink"
         }`}
       >

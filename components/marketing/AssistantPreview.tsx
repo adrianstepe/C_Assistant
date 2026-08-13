@@ -53,7 +53,7 @@ export function AssistantPreview() {
   }, [shown, showTyping]);
 
   return (
-    <div className="border-hairline overflow-hidden rounded-2xl border bg-white shadow-xl shadow-ink/[0.07]">
+    <div className="border-hairline overflow-hidden rounded-lg border bg-white shadow-xl shadow-ink/[0.07]">
       <header className="border-hairline bg-mist/70 flex items-center justify-between gap-3 border-b px-4 py-3">
         <div className="flex min-w-0 items-center gap-2.5">
           <span
@@ -70,7 +70,7 @@ export function AssistantPreview() {
             type="button"
             onClick={() => setPlaying((value) => !value)}
             aria-pressed={!playing}
-            className="border-hairline text-slate-body inline-flex min-h-8 shrink-0 items-center rounded-md border bg-white px-3 text-xs font-medium transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="border-hairline text-slate-body inline-flex min-h-8 shrink-0 items-center rounded-md border bg-white px-3 text-xs font-medium transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           >
             {playing ? "Pause" : "Play"}
             <span className="sr-only"> the example conversation</span>
@@ -161,7 +161,7 @@ export function AssistantPreview() {
           )}
 
           {shown >= TOTAL ? (
-            <p className="bg-brand-tint mt-4 rounded-lg px-3 py-2 text-xs font-medium text-brand-dark">
+            <p className="bg-clear-tint text-clear mt-4 rounded-lg px-3 py-2 text-xs font-medium">
               Sent to your team · ready to price
             </p>
           ) : null}

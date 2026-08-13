@@ -33,14 +33,14 @@ const tick = (
 export function PricingPanel({ mode }: { mode: CheckoutMode }) {
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:items-start">
-      <div className="border-hairline rounded-2xl border bg-white p-6 sm:p-8">
+      <div className="border-hairline rounded-lg border bg-white p-6 sm:p-8">
         <h2 className="text-lg font-semibold text-ink">
           What&rsquo;s included
         </h2>
         <ul className="mt-5 space-y-4">
           {PLAN_FEATURES.map((feature) => (
             <li key={feature.title} className="flex gap-3">
-              <span className="bg-brand-tint mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-brand-dark">
+              <span className="bg-clear-tint text-clear mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full">
                 {tick}
               </span>
               <div>
@@ -56,8 +56,9 @@ export function PricingPanel({ mode }: { mode: CheckoutMode }) {
         </ul>
       </div>
 
-      <div className="border-hairline rounded-2xl border bg-white p-6 shadow-xl shadow-ink/[0.07] sm:p-8 lg:sticky lg:top-24">
-        <p className="text-xs font-semibold tracking-[0.14em] text-brand uppercase">
+      <div className="border-hairline rounded-lg border bg-white p-6 shadow-xl shadow-ink/[0.07] sm:p-8 lg:sticky lg:top-24">
+        <p className="text-slate-body inline-flex items-center gap-2 font-mono text-xs font-medium tracking-[0.14em] uppercase">
+          <span className="bg-brand inline-block size-2" aria-hidden="true" />
           {PRODUCT_NAME}
         </p>
 
@@ -100,7 +101,7 @@ export function PricingPanel({ mode }: { mode: CheckoutMode }) {
         <ul className="mt-2 space-y-2">
           {PLAN_TERMS.map((term) => (
             <li key={term} className="text-slate-body flex gap-2 text-xs leading-relaxed">
-              <span aria-hidden="true" className="text-brand">
+              <span aria-hidden="true" className="text-slate-body">
                 •
               </span>
               {term}

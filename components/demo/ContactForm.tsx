@@ -5,6 +5,7 @@ import type { FormEvent } from "react";
 import type { ContactDetails } from "@/lib/ai/types";
 import { isValidEmail, isValidName, isValidPhone } from "@/lib/ai/extract";
 import { Field, controlClass } from "@/components/ui/Field";
+import { TypingDots } from "@/components/ui/TypingDots";
 
 interface ContactFormProps {
   disabled: boolean;
@@ -132,14 +133,21 @@ export function ContactForm({ disabled, onSubmit }: ContactFormProps) {
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-slate-body text-xs">
-            This is a demonstration — nothing is sent or stored anywhere.
+            This is a demonstration. Nothing is sent or stored anywhere.
           </p>
           <button
             type="submit"
             disabled={disabled}
-            className="bg-brand inline-flex min-h-11 w-full items-center justify-center rounded-lg px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
+            className="bg-brand inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold text-ink transition-colors hover:bg-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
           >
-            Send details
+            {disabled ? (
+              <>
+                Sending
+                <TypingDots tone="muted" />
+              </>
+            ) : (
+              "Send details"
+            )}
           </button>
         </div>
       </form>

@@ -50,7 +50,7 @@ export const WORKFLOW_STEPS: readonly WorkflowStep[] = [
   {
     title: "The assistant replies",
     description:
-      "Straight away, in your company’s name — no queue, no voicemail.",
+      "Straight away, in your company’s name: no queue, no voicemail.",
   },
   {
     title: "It asks what you’d ask",

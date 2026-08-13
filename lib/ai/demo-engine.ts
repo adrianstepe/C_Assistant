@@ -87,7 +87,7 @@ const SLOT_SPECS: Record<SlotId, SlotSpec> = {
 };
 
 const CONTACT_QUESTION =
-  "Last thing — who should the quote go to? I'll pass this straight to the team.";
+  "Last thing, who should the quote go to? I'll pass this straight to the team.";
 
 /** First slot still missing; also tells us what the previous turn asked. */
 function nextSlot(lead: LeadDraft): SlotId | null {
@@ -106,7 +106,7 @@ function acknowledge(filled: readonly SlotId[], lead: LeadDraft): string {
     .slice(0, 2);
 
   if (parts.length === 0) return "Thanks.";
-  return `Got it — ${parts.join(", ")}.`;
+  return `Got it, ${parts.join(", ")}.`;
 }
 
 /** A touch of latency so the typing indicator reads as real work. */
@@ -199,7 +199,7 @@ export function createDemoEngine(
     greeting(): AssistantReply {
       return {
         messages: [
-          `Hi — thanks for getting in touch with ${DEMO_COMPANY}. Tell me what you need cleaned and I'll put together everything the team needs to price it.`,
+          `Hi, thanks for getting in touch with ${DEMO_COMPANY}. Tell me what you need cleaned and I'll put together everything the team needs to price it.`,
         ],
         suggestions: [
           "I need office cleaning in Manchester",
@@ -243,7 +243,7 @@ function handleContact(lead: LeadDraft, contact: ContactDetails): AssistantReply
   if (!isValidName(contact.name) || !isValidEmail(contact.email)) {
     return {
       messages: [
-        "I couldn't read those details — could you check the name and email and try once more?",
+        "I couldn't read those details. Could you check the name and email and try once more?",
       ],
       suggestions: [],
       inputMode: "contact",

@@ -16,7 +16,7 @@ export function DemoOutro({ onRestart }: { onRestart: () => void }) {
   return (
     <section
       aria-labelledby="demo-outro-heading"
-      className="bg-ink relative overflow-hidden rounded-2xl px-6 py-10 text-center sm:px-10 sm:py-12"
+      className="bg-ink relative overflow-hidden rounded-lg px-6 py-10 text-center sm:px-10 sm:py-12"
     >
       <div aria-hidden="true" className="ink-grid pointer-events-none absolute inset-0" />
 
@@ -28,7 +28,7 @@ export function DemoOutro({ onRestart }: { onRestart: () => void }) {
           Imagine every quote enquiry being handled like this automatically.
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-pretty text-white/70">
-          Same questions, same structure, every time — at two in the morning or
+          Same questions, same structure, every time, at two in the morning or
           halfway through a Friday site visit.
         </p>
 

@@ -8,18 +8,18 @@ export function BenefitsSection() {
         <SectionHeading
           eyebrow="What changes"
           title="Less chasing, better briefs, fewer enquiries that quietly die."
-          lead="No promises about your conversion rate — that depends on your prices and your patch. These are the things the assistant actually does."
+          lead="No promises about your conversion rate. That depends on your prices and your patch. These are the things the assistant actually does."
         />
 
         <ul className="mt-12 grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
           {BENEFITS.map((benefit) => (
             <li
               key={benefit.title}
-              className="border-hairline rounded-xl border bg-white p-6 transition-shadow hover:shadow-md hover:shadow-ink/[0.05]"
+              className="border-hairline rounded-lg border bg-white p-6 transition-shadow hover:shadow-md hover:shadow-ink/[0.05]"
             >
               <span
                 aria-hidden="true"
-                className="bg-brand-tint flex size-9 items-center justify-center rounded-lg text-brand-dark"
+                className="bg-clear-tint text-clear flex size-9 items-center justify-center rounded-lg"
               >
                 <svg
                   width="18"

@@ -157,11 +157,11 @@ export function OnboardingForm() {
 
   if (summary) {
     const mailto = `mailto:${BRAND.contactEmail}?subject=${encodeURIComponent(
-      `Setup details — ${values.companyName.trim()}`,
+      `Setup details: ${values.companyName.trim()}`,
     )}&body=${encodeURIComponent(summary)}`;
 
     return (
-      <div className="border-hairline rounded-2xl border bg-white p-6 sm:p-8">
+      <div className="border-hairline rounded-lg border bg-white p-6 sm:p-8">
         <h2 className="text-lg font-semibold text-ink">
           Your setup details are ready
         </h2>
@@ -198,7 +198,7 @@ export function OnboardingForm() {
           <button
             type="button"
             onClick={() => setSummary(null)}
-            className="text-slate-body hover:text-ink rounded-lg px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="text-slate-body hover:text-ink rounded-lg px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           >
             Edit answers
           </button>
@@ -214,7 +214,7 @@ export function OnboardingForm() {
       ref={formRef}
       onSubmit={handleSubmit}
       noValidate
-      className="border-hairline rounded-2xl border bg-white p-6 sm:p-8"
+      className="border-hairline rounded-lg border bg-white p-6 sm:p-8"
     >
       <h2 className="text-lg font-semibold text-ink">
         Set up your assistant

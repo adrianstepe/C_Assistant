@@ -29,7 +29,7 @@ export const PREVIEW_STEPS: readonly PreviewStep[] = [
   {
     message: {
       role: "customer",
-      text: "Hi — do you cover office cleaning in Manchester? We’ve got roughly 1,500 sq ft and need a price.",
+      text: "Hi, do you cover office cleaning in Manchester? We’ve got roughly 1,500 sq ft and need a price.",
     },
     fields: [
       { label: "Service", value: "Office cleaning" },
@@ -46,7 +46,7 @@ export const PREVIEW_STEPS: readonly PreviewStep[] = [
   {
     message: {
       role: "customer",
-      text: "Regular — three evenings a week if you can do it.",
+      text: "Regular: three evenings a week if you can do it.",
     },
     fields: [{ label: "Frequency", value: "3 evenings per week" }],
   },
@@ -75,7 +75,7 @@ export const PREVIEW_STEPS: readonly PreviewStep[] = [
   {
     message: {
       role: "customer",
-      text: "Start of next month ideally. Sarah Whitfield — s.whitfield@harburyoffices.co.uk, 0161 496 0142.",
+      text: "Start of next month ideally. Sarah Whitfield, s.whitfield@harburyoffices.co.uk, 0161 496 0142.",
     },
     fields: [
       { label: "Start date", value: "1 September" },
@@ -87,7 +87,7 @@ export const PREVIEW_STEPS: readonly PreviewStep[] = [
   {
     message: {
       role: "assistant",
-      text: "Thanks Sarah. That’s everything the team needs — they’ll come back to you with a price.",
+      text: "Thanks Sarah. That’s everything the team needs. They’ll come back to you with a price.",
     },
   },
 ];

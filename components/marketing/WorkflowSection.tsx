@@ -57,7 +57,7 @@ export function WorkflowSection() {
                 aria-hidden="true"
                 className="flex flex-col items-center lg:hidden"
               >
-                <span className="border-hairline flex size-10 shrink-0 items-center justify-center rounded-full border bg-white text-brand">
+                <span className="bg-ink flex size-10 shrink-0 items-center justify-center rounded-full text-white">
                   {STEP_ICONS[index]}
                 </span>
                 {index < WORKFLOW_STEPS.length - 1 ? (
@@ -65,10 +65,10 @@ export function WorkflowSection() {
                 ) : null}
               </div>
 
-              <div className="border-hairline ml-4 flex-1 rounded-xl border bg-white p-5 shadow-sm shadow-ink/[0.03] lg:ml-0 lg:h-full">
+              <div className="border-hairline ml-4 flex-1 rounded-md border bg-white p-5 shadow-sm shadow-ink/[0.03] lg:ml-0 lg:h-full">
                 <div
                   aria-hidden="true"
-                  className="mb-4 hidden size-10 items-center justify-center rounded-full border border-hairline bg-mist text-brand lg:flex"
+                  className="bg-ink mb-4 hidden size-10 items-center justify-center rounded-full text-white lg:flex"
                 >
                   {STEP_ICONS[index]}
                 </div>

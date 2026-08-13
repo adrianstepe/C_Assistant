@@ -55,7 +55,7 @@ function Mail() {
   return (
     <a
       href={`mailto:${BRAND.contactEmail}`}
-      className="rounded-md font-medium text-brand underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      className="rounded-md font-medium text-ink underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
     >
       {BRAND.contactEmail}
     </a>
@@ -68,7 +68,7 @@ export default function PrivacyPage() {
   return (
     <Container className="py-12 sm:py-16">
       <div className="max-w-2xl">
-        <h1 className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
           Privacy notice
         </h1>
         <p className="text-slate-body mt-4 text-sm">Last reviewed: {LAST_REVIEWED}</p>
@@ -124,8 +124,8 @@ export default function PrivacyPage() {
               <>
                 The demo currently runs entirely in your browser. The
                 conversation is not sent to a server, is not recorded, and is not
-                visible to us. Anything you type — including any name or email
-                entered at the demo&rsquo;s contact step — stays on your device
+                visible to us. Anything you type, including any name or email
+                entered at the demo&rsquo;s contact step, stays on your device
                 and is discarded when you close or refresh the page.
               </>
             )}
@@ -134,8 +134,8 @@ export default function PrivacyPage() {
             <strong className="font-medium text-ink">If you email us.</strong> Your
             name, email address and whatever you write. We use it to reply and to
             keep a record of what was discussed and agreed. Legal basis:
-            legitimate interests (Art. 6(1)(f)) — responding to someone who has
-            contacted us — or, where you become a customer, performance of a
+            legitimate interests (Art. 6(1)(f)), responding to someone who has
+            contacted us, or, where you become a customer, performance of a
             contract (Art. 6(1)(b)).
           </p>
           <p>
@@ -182,25 +182,25 @@ export default function PrivacyPage() {
           <p>We use the following providers. No one else receives your data.</p>
           <ul className="list-disc space-y-2 pl-5">
             <li>
-              <strong className="font-medium text-ink">Vercel Inc.</strong> —
+              <strong className="font-medium text-ink">Vercel Inc.:</strong>{" "}
               hosting. Processes request data (including IP address) to serve and
               protect the site.
             </li>
             <li>
-              <strong className="font-medium text-ink">Stripe</strong> — payment
+              <strong className="font-medium text-ink">Stripe:</strong> payment
               processing. Stripe acts as an independent controller for payment
               data under its own privacy policy.
             </li>
             {modelEnabled ? (
               <li>
-                <strong className="font-medium text-ink">DeepSeek</strong> — the AI
+                <strong className="font-medium text-ink">DeepSeek:</strong> the AI
                 model that generates assistant replies. Message content typed into
                 the assistant is sent to DeepSeek for processing.
               </li>
             ) : null}
             <li>
-              <strong className="font-medium text-ink">Our email provider</strong>{" "}
-              — correspondence sent to {BRAND.contactEmail}.
+              <strong className="font-medium text-ink">Our email provider:</strong>{" "}
+              correspondence sent to {BRAND.contactEmail}.
             </li>
           </ul>
           <p>
@@ -212,7 +212,7 @@ export default function PrivacyPage() {
         <Section id="transfers" heading="5. Transfers outside the EEA">
           <p>
             We are established in {BRAND.jurisdiction}, in the EU. Some of our
-            providers process data outside the European Economic Area — Vercel
+            providers process data outside the European Economic Area: Vercel
             in the United States, and, where the AI assistant is enabled,
             DeepSeek in China.
           </p>
@@ -229,7 +229,7 @@ export default function PrivacyPage() {
             our transfer safeguards for AI processing are not yet finalised.
             Until they are, do not type personal data about identifiable people
             into the assistant. If this affects a decision you are making about
-            using us, email <Mail /> and ask — we will tell you exactly where
+            using us, email <Mail /> and ask. We will tell you exactly where
             things stand rather than give you a reassuring non-answer.
           </p>
         </Section>
@@ -262,7 +262,7 @@ export default function PrivacyPage() {
           </p>
           <p>
             Art. 28 requires a written data processing agreement between us
-            before that processing starts. Ask for ours at <Mail /> — and if you
+            before that processing starts. Ask for ours at <Mail />, and if you
             are buying, ask before you go live rather than after.
           </p>
         </Section>
@@ -301,7 +301,7 @@ export default function PrivacyPage() {
             supervisory authority. Ours is the Latvian{" "}
             <span className="text-ink">Datu valsts inspekcija</span> (State Data
             Inspectorate). You may also complain to the authority where you live
-            or work — in the United Kingdom, the Information
+            or work: in the United Kingdom, the Information
             Commissioner&rsquo;s Office.
           </p>
         </Section>
@@ -317,7 +317,7 @@ export default function PrivacyPage() {
             Related:{" "}
             <Link
               href="/terms"
-              className="rounded-md font-medium text-brand underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              className="rounded-md font-medium text-ink underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
               Terms
             </Link>

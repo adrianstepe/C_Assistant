@@ -58,7 +58,7 @@ export function Composer({
               type="button"
               disabled={disabled}
               onClick={() => submit(suggestion)}
-              className="border-hairline text-slate-body rounded-full border bg-white px-3 py-1.5 text-xs font-medium transition-colors hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
+              className="border-hairline text-slate-body active:scale-95 rounded-full border bg-white px-3 py-1.5 text-xs font-medium transition-colors hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
             >
               {suggestion}
             </button>
@@ -80,12 +80,12 @@ export function Composer({
           disabled={disabled}
           onChange={(event) => setValue(event.target.value)}
           placeholder="Type your reply…"
-          className="border-hairline text-ink min-h-11 w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-body/70 focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/25 disabled:opacity-60 sm:text-[0.9375rem]"
+          className="border-hairline text-ink min-h-11 w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-body/70 focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ink/12 disabled:opacity-60 sm:text-[0.9375rem]"
         />
         <button
           type="submit"
           disabled={!canSend}
-          className="bg-brand inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-40"
+          className="bg-brand inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg px-4 text-sm font-semibold text-ink transition-colors hover:bg-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-40"
         >
           Send
           <svg

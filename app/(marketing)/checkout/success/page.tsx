@@ -50,13 +50,13 @@ export default async function CheckoutSuccessPage({
     return (
       <Container className="py-16 sm:py-24">
         <div className="max-w-xl">
-          <h1 className="text-3xl font-semibold tracking-tight text-balance text-ink sm:text-4xl">
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-balance text-ink sm:text-4xl">
             We couldn&rsquo;t confirm that payment.
           </h1>
           <p className="text-slate-body mt-5 text-lg leading-relaxed text-pretty">
             The checkout didn&rsquo;t complete, or the link has expired. Nothing
             has been set up. If money has left your account, don&rsquo;t pay
-            again — email us and we&rsquo;ll sort it out.
+            again. Email us and we&rsquo;ll sort it out.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link href="/pricing" className={`${primaryButton} w-full sm:w-auto`}>
@@ -77,12 +77,12 @@ export default async function CheckoutSuccessPage({
   return (
     <Container className="py-12 sm:py-16">
       <div className="max-w-2xl">
-        <span className="bg-brand-tint inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold text-brand-dark">
-          <span className="size-1.5 rounded-full bg-brand" aria-hidden="true" />
+        <span className="bg-clear-tint text-clear inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold">
+          <span className="bg-clear size-1.5 rounded-full" aria-hidden="true" />
           {isPreview ? "Development preview" : "Payment received"}
         </span>
 
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-balance text-ink sm:text-4xl lg:text-[2.75rem]">
+        <h1 className="font-display mt-4 text-3xl font-semibold tracking-tight text-balance text-ink sm:text-4xl lg:text-[2.75rem]">
           You&rsquo;re set up. Here&rsquo;s what happens next.
         </h1>
 
@@ -99,9 +99,9 @@ export default async function CheckoutSuccessPage({
               <>
                 We&rsquo;ve taken{" "}
                 <strong className="font-semibold text-ink">
-                  {formatAmount(summary.amountTotal, summary.currency)}
+                  {formatAmount(summary.amountTotal, summary.currency)}:
                 </strong>{" "}
-                — {SETUP_FEE_LABEL} setup and your first month. Your next
+                {SETUP_FEE_LABEL} setup and your first month. Your next
                 payment of {MONTHLY_FEE_LABEL} is a month from today.
               </>
             ) : (
@@ -132,8 +132,8 @@ export default async function CheckoutSuccessPage({
             body: "We give you a snippet to paste in, or do it with your web person.",
           },
         ].map((item) => (
-          <li key={item.step} className="border-hairline rounded-xl border bg-white p-5">
-            <p className="font-mono text-xs text-brand">{item.step}</p>
+          <li key={item.step} className="border-hairline border-t-brand rounded-lg border border-t-2 bg-white p-5">
+            <p className="text-slate-body font-mono text-xs font-medium">{item.step}</p>
             <h2 className="mt-2 text-base font-semibold text-ink">{item.title}</h2>
             <p className="text-slate-body mt-1.5 text-sm leading-relaxed text-pretty">
               {item.body}
@@ -150,7 +150,7 @@ export default async function CheckoutSuccessPage({
         Questions in the meantime? Email{" "}
         <a
           href={`mailto:${BRAND.contactEmail}`}
-          className="rounded-md font-medium text-brand underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          className="rounded-md font-medium text-ink underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
         >
           {BRAND.contactEmail}
         </a>

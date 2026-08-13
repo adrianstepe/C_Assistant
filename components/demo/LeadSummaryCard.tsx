@@ -21,8 +21,8 @@ export function LeadSummaryCard({ lead }: { lead: LeadDraft }) {
             {reference} · captured by the assistant
           </p>
         </div>
-        <span className="bg-brand-tint inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-brand-dark">
-          <span className="size-1.5 rounded-full bg-brand" aria-hidden="true" />
+        <span className="bg-clear-tint text-clear inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold">
+          <span className="bg-clear size-1.5 rounded-full" aria-hidden="true" />
           Ready to quote
         </span>
       </header>
@@ -32,7 +32,7 @@ export function LeadSummaryCard({ lead }: { lead: LeadDraft }) {
           {rows.map((row) => (
             <div
               key={row.label}
-              className="border-hairline/70 flex flex-col gap-0.5 border-t py-3 first:border-t-0 first:pt-0 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6"
+              className="border-hairline/70 animate-field-in flex flex-col gap-0.5 border-t py-3 first:border-t-0 first:pt-0 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6"
             >
               <dt className="text-slate-body shrink-0 text-xs font-medium tracking-wide uppercase">
                 {row.label}
@@ -63,7 +63,7 @@ export function LeadSummaryCard({ lead }: { lead: LeadDraft }) {
 
       {/* The structured-data story, shown rather than claimed. */}
       <details className="border-hairline border-t">
-        <summary className="text-slate-body hover:text-ink cursor-pointer list-none px-5 py-3 text-xs font-medium select-none focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand [&::-webkit-details-marker]:hidden">
+        <summary className="text-slate-body hover:text-ink cursor-pointer list-none px-5 py-3 text-xs font-medium select-none focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ink [&::-webkit-details-marker]:hidden">
           View the structured data your systems would receive
         </summary>
         <pre className="bg-ink overflow-x-auto px-5 py-4 text-[0.6875rem] leading-relaxed text-white/85">

@@ -111,7 +111,7 @@ export function QuoteAssistantDemo({ useModel = false }: { useModel?: boolean })
     } catch {
       dispatch({
         type: "failed",
-        message: "The assistant didn't respond. That's on us — try again.",
+        message: "The assistant didn't respond. That's on us. Try again.",
       });
     } finally {
       inFlight.current = false;
@@ -198,7 +198,7 @@ export function QuoteAssistantDemo({ useModel = false }: { useModel?: boolean })
             <button
               type="button"
               onClick={restart}
-              className="border-hairline text-slate-body hover:text-ink inline-flex min-h-9 shrink-0 items-center rounded-md border bg-white px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              className="border-hairline text-slate-body hover:text-ink active:scale-95 inline-flex min-h-9 shrink-0 items-center rounded-md border bg-white px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
               Start again
             </button>
@@ -223,7 +223,7 @@ export function QuoteAssistantDemo({ useModel = false }: { useModel?: boolean })
             ))}
 
             {isBusy ? (
-              <div className="flex justify-start">
+              <div className="animate-message-in flex justify-start">
                 <div className="border-hairline bg-mist rounded-2xl rounded-bl-md border px-4 py-3">
                   <TypingDots />
                   <span className="sr-only">The assistant is typing</span>
@@ -238,7 +238,7 @@ export function QuoteAssistantDemo({ useModel = false }: { useModel?: boolean })
                   <button
                     type="button"
                     onClick={() => void retry()}
-                    className="mt-2 rounded-md border border-rose-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-rose-800 hover:bg-rose-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                    className="mt-2 rounded-md border border-rose-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-rose-800 hover:bg-rose-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
                   >
                     Try again
                   </button>
@@ -259,12 +259,12 @@ export function QuoteAssistantDemo({ useModel = false }: { useModel?: boolean })
           {isComplete ? (
             <div className="border-hairline flex flex-wrap items-center justify-between gap-3 border-t bg-white px-4 py-3">
               <p className="text-slate-body text-xs">
-                Conversation finished — the lead is ready.
+                Conversation finished. The lead is ready.
               </p>
               <button
                 type="button"
                 onClick={restart}
-                className="border-hairline text-ink hover:bg-mist inline-flex min-h-9 items-center rounded-md border px-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                className="border-hairline text-ink hover:bg-mist inline-flex min-h-9 items-center rounded-md border px-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
               >
                 Try another enquiry
               </button>

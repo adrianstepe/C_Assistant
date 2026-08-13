@@ -57,7 +57,7 @@ export interface ChatTurn {
 const TIMEOUT_MS = 12_000;
 
 /** Caps the cost of any single call regardless of what the model wants to say. */
-const MAX_OUTPUT_TOKENS = 400;
+const MAX_OUTPUT_TOKENS = 250;
 
 export interface CompletionResult {
   ok: boolean;

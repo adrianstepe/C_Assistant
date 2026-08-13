@@ -4,7 +4,7 @@ import { Container, primaryButtonSm } from "./primitives";
 import { Wordmark } from "./Wordmark";
 
 const navLinkClass =
-  "rounded-md px-2 py-1 text-sm font-medium text-slate-body transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand";
+  "rounded-md px-2 py-1 text-sm font-medium text-slate-body transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
 /**
  * Sticky header.
@@ -20,7 +20,7 @@ export function SiteHeader() {
         <div className="flex h-16 items-center justify-between gap-4">
           <Link
             href="/"
-            className="rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
+            className="rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
             aria-label={`${BRAND.name} home`}
           >
             <Wordmark />
@@ -45,7 +45,7 @@ export function SiteHeader() {
 
           <details className="relative md:hidden [&[open]_.menu-open]:hidden [&[open]_.menu-close]:block">
             <summary
-              className="border-hairline flex size-11 cursor-pointer list-none items-center justify-center rounded-lg border text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand [&::-webkit-details-marker]:hidden"
+              className="border-hairline flex size-11 cursor-pointer list-none items-center justify-center rounded-lg border text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink [&::-webkit-details-marker]:hidden"
               aria-label="Toggle navigation menu"
             >
               <svg
@@ -78,13 +78,13 @@ export function SiteHeader() {
               </svg>
             </summary>
 
-            <div className="border-hairline absolute right-0 z-50 mt-3 w-64 rounded-xl border bg-white p-2 shadow-lg shadow-ink/5">
+            <div className="border-hairline absolute right-0 z-50 mt-3 w-64 rounded-lg border bg-white p-2 shadow-lg shadow-ink/5">
               <nav aria-label="Mobile" className="flex flex-col">
                 {NAV_LINKS.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="rounded-lg px-3 py-3 text-sm font-medium text-ink hover:bg-mist focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                    className="rounded-lg px-3 py-3 text-sm font-medium text-ink hover:bg-mist focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
                   >
                     {link.label}
                   </Link>

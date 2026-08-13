@@ -139,9 +139,9 @@ function parseSize(raw: string, asked: boolean): SlotValue | null {
     }
   }
 
-  if (/\bsmall\b/i.test(raw)) return { display: "Small — under 1,000 sq ft", code: "small" };
-  if (/\b(medium|mid)\b/i.test(raw)) return { display: "Medium — 1,000–3,000 sq ft", code: "medium" };
-  if (/\b(large|big)\b/i.test(raw)) return { display: "Large — over 5,000 sq ft", code: "large" };
+  if (/\bsmall\b/i.test(raw)) return { display: "Small: under 1,000 sq ft", code: "small" };
+  if (/\b(medium|mid)\b/i.test(raw)) return { display: "Medium: 1,000-3,000 sq ft", code: "medium" };
+  if (/\b(large|big)\b/i.test(raw)) return { display: "Large: over 5,000 sq ft", code: "large" };
 
   // A bare number only counts when we actually asked about size.
   if (asked) {
@@ -276,7 +276,7 @@ export function parseSlot(slot: SlotId, raw: string): SlotValue {
   if (UNSURE.test(text)) {
     switch (slot) {
       case "size":
-        return { display: "Not known — to confirm on site", code: "unknown" };
+        return { display: "Not known, to confirm on site", code: "unknown" };
       case "requirements":
         return { display: "General cleaning, nothing specialist", code: "general" };
       default:
@@ -291,7 +291,7 @@ export function parseSlot(slot: SlotId, raw: string): SlotValue {
       return parseLocation(text) ?? { display: sentenceCase(text) };
     case "size":
       // Refuse to record nonsense as a floor area.
-      return parseSize(text, true) ?? { display: "Not known — to confirm on site", code: "unknown" };
+      return parseSize(text, true) ?? { display: "Not known, to confirm on site", code: "unknown" };
     case "frequency":
       return parseFrequency(text) ?? { display: sentenceCase(text) };
     case "preferredTime":
@@ -301,6 +301,24 @@ export function parseSlot(slot: SlotId, raw: string): SlotValue {
     case "requirements":
       return parseRequirements(text) ?? { display: sentenceCase(text) };
   }
+}
+
+/**
+ * Whether the targeted parse for `slot` recognised a specific, known answer,
+ * as opposed to falling through to the catch-all branch every `parseSlot`
+ * implementation is guaranteed to return something from.
+ *
+ * Mirrors the carve-out `isEchoable` already makes: a `code` of "other" or
+ * "unknown" means nothing was actually recognised, only echoed back, so it
+ * is not confident either. "Not sure"-style answers are the one exception -
+ * `UNSURE` is a genuine recognised pattern that happens to share the
+ * "unknown"/"general" code with the unparseable fallback, so it is checked
+ * directly rather than trusted via `code`.
+ */
+export function isConfidentMatch(slot: SlotId, raw: string): boolean {
+  if (UNSURE.test(raw.trim())) return true;
+  const { code } = parseSlot(slot, raw);
+  return code !== undefined && code !== "other" && code !== "unknown";
 }
 
 // --- contact validation ------------------------------------------------------

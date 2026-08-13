@@ -22,7 +22,7 @@ export default function CheckoutCancelledPage() {
         <p className="text-xs font-semibold tracking-[0.14em] text-slate-body uppercase">
           Checkout cancelled
         </p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-balance text-ink sm:text-4xl">
+        <h1 className="font-display mt-3 text-3xl font-semibold tracking-tight text-balance text-ink sm:text-4xl">
           No payment was taken.
         </h1>
         <p className="text-slate-body mt-5 text-lg leading-relaxed text-pretty">
@@ -44,7 +44,7 @@ export default function CheckoutCancelledPage() {
           Something not working, or a question before you commit? Email{" "}
           <a
             href={`mailto:${BRAND.contactEmail}`}
-            className="rounded-md font-medium text-brand underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="rounded-md font-medium text-ink underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           >
             {BRAND.contactEmail}
           </a>

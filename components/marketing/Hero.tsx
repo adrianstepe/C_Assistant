@@ -4,7 +4,7 @@ import { LeadCard } from "./LeadCard";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-white">
+    <section className="bg-paper relative overflow-hidden">
       <div
         aria-hidden="true"
         className="hero-grid pointer-events-none absolute inset-0"
@@ -13,11 +13,12 @@ export function Hero() {
       <Container className="relative pt-14 pb-16 sm:pt-20 sm:pb-24 lg:pt-24 lg:pb-28">
         <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-16">
           <div>
-            <p className="border-hairline text-slate-body inline-flex items-center rounded-full border bg-white/70 px-3 py-1 text-xs font-medium">
+            <p className="border-hairline text-slate-body inline-flex items-center gap-2 border bg-white px-3 py-1 text-xs font-medium">
+              <span className="bg-brand inline-block size-2" aria-hidden="true" />
               For UK commercial cleaning companies
             </p>
 
-            <h1 className="mt-5 text-[2.5rem] leading-[1.06] font-semibold tracking-[-0.03em] text-balance text-ink sm:text-5xl lg:text-[3.5rem]">
+            <h1 className="font-display mt-5 text-[2.75rem] leading-[1.03] font-semibold tracking-[-0.01em] text-balance text-ink sm:text-6xl lg:text-[4rem]">
               Every cleaning enquiry answered in seconds, not on Monday.
             </h1>
 

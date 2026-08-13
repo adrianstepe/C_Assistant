@@ -11,7 +11,7 @@ export function FinalCta() {
       />
 
       <Container className="relative py-20 text-center sm:py-28">
-        <h2 className="mx-auto max-w-3xl text-3xl font-semibold tracking-tight text-balance text-white sm:text-4xl lg:text-[2.75rem]">
+        <h2 className="font-display mx-auto max-w-3xl text-3xl font-semibold tracking-tight text-balance text-white sm:text-4xl lg:text-[2.75rem]">
           See how it works before you talk to anyone.
         </h2>
         <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-pretty text-white/70 sm:text-lg">

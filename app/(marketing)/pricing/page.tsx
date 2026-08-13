@@ -20,10 +20,11 @@ export default function PricingPage() {
   return (
     <Container className="py-12 sm:py-16">
       <div className="max-w-2xl">
-        <p className="text-xs font-semibold tracking-[0.14em] text-brand uppercase">
+        <p className="text-slate-body inline-flex items-center gap-2 font-mono text-xs font-medium tracking-[0.14em] uppercase">
+          <span className="bg-brand inline-block size-2" aria-hidden="true" />
           Pricing
         </p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-balance text-ink sm:text-4xl lg:text-[2.75rem]">
+        <h1 className="font-display mt-3 text-3xl font-semibold tracking-tight text-balance text-ink sm:text-4xl lg:text-[2.75rem]">
           {SETUP_FEE_LABEL} to set up, {MONTHLY_FEE_LABEL} a month to run.
         </h1>
         <p className="text-slate-body mt-5 text-lg leading-relaxed text-pretty">
@@ -37,7 +38,7 @@ export default function PricingPage() {
         <PricingPanel mode={mode} />
       </div>
 
-      <div className="border-hairline mt-12 rounded-2xl border border-dashed bg-white/50 p-6 sm:p-8">
+      <div className="border-hairline mt-12 rounded-lg border border-dashed bg-white/50 p-6 sm:p-8">
         <h2 className="text-base font-semibold text-ink">
           Not sure yet?
         </h2>

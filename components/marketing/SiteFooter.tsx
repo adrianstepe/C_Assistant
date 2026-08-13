@@ -31,7 +31,7 @@ export function SiteFooter() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-slate-body inline-block rounded-md py-2 text-sm transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                      className="text-slate-body inline-block rounded-md py-2 text-sm transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
                     >
                       {link.label}
                     </Link>
@@ -48,7 +48,7 @@ export function SiteFooter() {
                 <li>
                   <a
                     href={`mailto:${BRAND.contactEmail}`}
-                    className="text-slate-body inline-block rounded-md py-2 text-sm transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                    className="text-slate-body inline-block rounded-md py-2 text-sm transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
                   >
                     {BRAND.contactEmail}
                   </a>

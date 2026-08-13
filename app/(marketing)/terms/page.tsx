@@ -56,7 +56,7 @@ export default function TermsPage() {
   return (
     <Container className="py-12 sm:py-16">
       <div className="max-w-2xl">
-        <h1 className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
           Terms
         </h1>
         <p className="text-slate-body mt-4 text-sm">
@@ -123,7 +123,7 @@ export default function TermsPage() {
         <Section heading="Setup and going live">
           <p>
             After payment we ask you for the details needed to configure the
-            assistant — your services, the areas you cover, and the questions you
+            assistant: your services, the areas you cover, and the questions you
             want asked. We configure it from those answers and provide it for you
             to add to your website.
           </p>
@@ -149,7 +149,7 @@ export default function TermsPage() {
             email{" "}
             <a
               href={`mailto:${BRAND.contactEmail}`}
-              className="rounded-md font-medium text-brand underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              className="rounded-md font-medium text-ink underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
               {BRAND.contactEmail}
             </a>{" "}
@@ -178,7 +178,7 @@ export default function TermsPage() {
             You are responsible for the accuracy of the information you give us
             for setup, for the content of the answers the assistant is
             configured to give on your behalf, and for how you use the enquiries
-            it passes to you — including complying with data protection law when
+            it passes to you, including complying with data protection law when
             you contact the people who made them.
           </p>
         </Section>
@@ -188,10 +188,10 @@ export default function TermsPage() {
             Enquiries the assistant collects on your website are your data. You
             are the controller and we act as your processor. Article 28 of the
             GDPR requires a written data processing agreement between us before
-            that processing begins — ask for ours at{" "}
+            that processing begins. Ask for ours at{" "}
             <a
               href={`mailto:${BRAND.contactEmail}`}
-              className="rounded-md font-medium text-brand underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              className="rounded-md font-medium text-ink underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
               {BRAND.contactEmail}
             </a>
@@ -202,7 +202,7 @@ export default function TermsPage() {
             is set out in our{" "}
             <Link
               href="/privacy"
-              className="rounded-md font-medium text-brand underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              className="rounded-md font-medium text-ink underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
               privacy notice
             </Link>
@@ -224,7 +224,7 @@ export default function TermsPage() {
             Questions about these terms go to{" "}
             <a
               href={`mailto:${BRAND.contactEmail}`}
-              className="rounded-md font-medium text-brand underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              className="rounded-md font-medium text-ink underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
               {BRAND.contactEmail}
             </a>
@@ -235,7 +235,7 @@ export default function TermsPage() {
             Related:{" "}
             <Link
               href="/privacy"
-              className="rounded-md font-medium text-brand underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              className="rounded-md font-medium text-ink underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
               Privacy
             </Link>

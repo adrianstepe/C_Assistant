@@ -39,18 +39,18 @@ export function AudienceSection() {
         <SectionHeading
           eyebrow="Who it’s for"
           title="Built for commercial cleaning, not adapted from something generic."
-          lead="The questions, the vocabulary and the lead format assume a cleaning business. That makes it sharper here — and a poor fit elsewhere."
+          lead="The questions, the vocabulary and the lead format assume a cleaning business. That makes it sharper here, and a poor fit elsewhere."
         />
 
         <div className="mt-12 grid gap-5 md:grid-cols-2">
-          <div className="border-hairline rounded-xl border bg-white p-6 sm:p-8">
+          <div className="border-hairline rounded-lg border bg-white p-6 sm:p-8">
             <h3 className="text-base font-semibold text-ink">
               A good fit if you’re
             </h3>
             <ul className="mt-5 space-y-3.5">
               {AUDIENCE_FITS.map((item) => (
                 <li key={item} className="flex gap-3">
-                  <span className="mt-0.5 shrink-0 text-brand">{tickIcon}</span>
+                  <span className="text-clear mt-0.5 shrink-0">{tickIcon}</span>
                   <span className="text-slate-body text-sm leading-relaxed sm:text-base">
                     {item}
                   </span>
@@ -59,7 +59,7 @@ export function AudienceSection() {
             </ul>
           </div>
 
-          <div className="border-hairline rounded-xl border border-dashed bg-white/50 p-6 sm:p-8">
+          <div className="border-hairline rounded-lg border border-dashed bg-white/50 p-6 sm:p-8">
             <h3 className="text-base font-semibold text-ink">
               Probably not worth it if
             </h3>
