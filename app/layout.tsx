@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
-import { Barlow_Semi_Condensed, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import { BRAND } from "@/lib/marketing/brand";
 import { publicEnv } from "@/lib/env";
 import "./globals.css";
@@ -10,26 +10,40 @@ import "./globals.css";
  * signage heritage for headlines, an operational sans for body copy, and a
  * mono face for reference numbers and timestamps - see globals.css for how
  * these bind to `font-sans` / `font-display` / `font-mono`.
+ *
+ * Self-hosted from `app/fonts` rather than fetched via `next/font/google`.
+ * That loader downloads the font binaries from fonts.gstatic.com *at build
+ * time*, so a URL Google has rotated away takes the whole deployment down with
+ * an unresolvable module - which is exactly what happened once with IBM Plex
+ * Sans. These are the same latin-subset files, committed, so the build depends
+ * on nothing outside the repository.
  */
-const display = Barlow_Semi_Condensed({
+const display = localFont({
   variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["600", "700"],
   display: "swap",
+  src: [
+    { path: "./fonts/barlow-semi-condensed-600.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/barlow-semi-condensed-700.woff2", weight: "700", style: "normal" },
+  ],
 });
 
-const body = IBM_Plex_Sans({
+const body = localFont({
   variable: "--font-body",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
   display: "swap",
+  src: [
+    { path: "./fonts/ibm-plex-sans-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/ibm-plex-sans-500.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/ibm-plex-sans-600.woff2", weight: "600", style: "normal" },
+  ],
 });
 
-const data = IBM_Plex_Mono({
+const data = localFont({
   variable: "--font-data",
-  subsets: ["latin"],
-  weight: ["400", "500"],
   display: "swap",
+  src: [
+    { path: "./fonts/ibm-plex-mono-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/ibm-plex-mono-500.woff2", weight: "500", style: "normal" },
+  ],
 });
 
 const description =

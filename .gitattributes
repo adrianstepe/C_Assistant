@@ -1,0 +1,7 @@
+# Font binaries must never be line-ending converted. Git usually infers this,
+# but this repository is edited on Windows with CRLF conversion active, and a
+# silently mangled woff2 fails only at render time.
+*.woff2 binary
+*.woff   binary
+*.ttf    binary
+*.otf    binary
