@@ -22,14 +22,16 @@ export const dynamic = "force-dynamic";
  * It describes only what the application actually does — nothing here asserts
  * a certification, an audit, or a compliance status.
  *
+ * Settled: the registered address and registration number are filled in
+ * (`lib/marketing/brand.ts`), so the "incomplete" banner no longer renders.
+ *
  * REVIEW BEFORE LAUNCH — factual details only the operator can supply:
- *  - Registered address and registration number (`lib/marketing/brand.ts`).
- *    While blank, a visible notice appears on the page.
  *  - Whether a Data Protection Officer is required (Art. 37). Assumed not.
  *  - Confirmed retention periods once anything is stored server-side.
  *  - The transfer safeguard for DeepSeek (Art. 46). See the transfers section:
  *    this is the single biggest open compliance item and is flagged in-page
- *    while unresolved.
+ *    while unresolved. The model is switched off by default until it is
+ *    resolved — see `ASSISTANT_MODEL_ENABLED` in `lib/ai/deepseek.ts`.
  */
 
 const LAST_REVIEWED = "August 2026";

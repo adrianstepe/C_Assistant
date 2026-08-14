@@ -22,13 +22,18 @@ export const BRAND = {
   /**
    * Registered address and company registration number.
    *
-   * REVIEW BEFORE LAUNCH: both are legally required in a GDPR privacy notice
-   * (Art. 13(1)(a)) and expected in terms of business. Left empty rather than
-   * guessed — the privacy and terms pages render a visible "to be confirmed"
-   * marker while these are blank, so an incomplete notice cannot go unnoticed.
+   * Both are legally required in a GDPR privacy notice (Art. 13(1)(a)) and
+   * expected in terms of business. The privacy and terms pages render a visible
+   * "to be confirmed" marker whenever either is blank, so an incomplete notice
+   * cannot go unnoticed — do not empty these again without meaning to.
+   *
+   * Widened to `string` so that "is this filled in?" stays a real runtime
+   * question. Under `as const` the literal types make the check below provably
+   * true, and the incomplete-notice banner would be compiled away rather than
+   * coming back if either value were ever cleared.
    */
-  registeredAddress: "",
-  registrationNumber: "",
+  registeredAddress: "Gulbene, Latvia" as string,
+  registrationNumber: "40203711274" as string,
 } as const;
 
 /** True once the company details required by the legal pages are filled in. */

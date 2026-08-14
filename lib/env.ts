@@ -18,6 +18,7 @@ export type ServerEnvVar =
   | "STRIPE_WEBHOOK_SECRET"
   | "ADMIN_USERNAME"
   | "ADMIN_PASSWORD"
+  | "ASSISTANT_MODEL_ENABLED"
   | "DEEPSEEK_API_KEY"
   | "DEEPSEEK_MODEL"
   | "DEEPSEEK_BASE_URL";
@@ -40,6 +41,21 @@ export function requireServerEnv(name: ServerEnvVar): string {
 export function optionalServerEnv(name: ServerEnvVar): string | undefined {
   const value = process.env[name];
   return value === undefined || value.trim() === "" ? undefined : value;
+}
+
+/**
+ * Reads a boolean opt-in flag. Absent, blank or anything other than an explicit
+ * affirmative reads as `false`.
+ *
+ * Deliberately opt-in rather than opt-out: these flags guard behaviour that
+ * must not switch itself on because a variable was misspelled, left blank by a
+ * deploy script, or lost when environment variables were copied between Vercel
+ * environments. "Off unless someone deliberately said on" is the only default
+ * that fails safe.
+ */
+export function serverFlagEnabled(name: ServerEnvVar): boolean {
+  const value = optionalServerEnv(name)?.toLowerCase();
+  return value === "true" || value === "1" || value === "yes";
 }
 
 const DEV_FALLBACK_SITE_URL = "http://localhost:3000";

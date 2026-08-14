@@ -1,5 +1,4 @@
 import type { Prospect, ProspectPatch } from "@/types/prospect";
-import { SEED_PROSPECTS } from "./seed-data";
 import {
   clearStoredProspects,
   loadProspects,
@@ -10,13 +9,31 @@ import {
  * A tiny external store backing the tracker, read through `useSyncExternalStore`.
  *
  * Why not `useState` + an effect: the data lives in `localStorage`, which the
- * server cannot see. `useSyncExternalStore` renders the seed list on the server
- * and during hydration, then swaps in the stored list — no cascading effects
- * and no hydration mismatch.
+ * server cannot see. `useSyncExternalStore` renders the file-backed list on the
+ * server and during hydration, then swaps in the stored list — no cascading
+ * effects and no hydration mismatch.
+ *
+ * The baseline list comes from `data/prospects.csv`, read on the server and
+ * handed in by the page. The store cannot read it itself: this module runs in
+ * the browser too, where there is no filesystem.
  */
 
+let baseline: Prospect[] = [];
 let snapshot: Prospect[] | null = null;
 const listeners = new Set<() => void>();
+
+/**
+ * Seeds the store with the list parsed from the CSV.
+ *
+ * Called during render, before the first snapshot is read, so the server render
+ * and the hydration pass agree. Re-setting it discards the cached snapshot so a
+ * changed file is picked up rather than masked by the previous request's list.
+ */
+export function setBaselineProspects(prospects: Prospect[]): void {
+  if (baseline === prospects) return;
+  baseline = prospects;
+  snapshot = null;
+}
 
 function emit(): void {
   for (const listener of listeners) listener();
@@ -37,13 +54,13 @@ export function subscribeToProspects(listener: () => void): () => void {
 }
 
 export function getProspectsSnapshot(): Prospect[] {
-  snapshot ??= loadProspects() ?? SEED_PROSPECTS;
+  snapshot ??= loadProspects() ?? baseline;
   return snapshot;
 }
 
-/** Server render and the hydration pass both use the seed list. */
+/** Server render and the hydration pass both use the list from the file. */
 export function getProspectsServerSnapshot(): Prospect[] {
-  return SEED_PROSPECTS;
+  return baseline;
 }
 
 export function patchProspect(id: string, patch: ProspectPatch): void {
@@ -62,9 +79,9 @@ export function removeProspect(id: string): void {
   commit(getProspectsSnapshot().filter((prospect) => prospect.id !== id));
 }
 
-/** Throws away local edits and goes back to the seed list. */
+/** Throws away local edits and goes back to the list in `data/prospects.csv`. */
 export function resetProspects(): void {
   clearStoredProspects();
-  snapshot = SEED_PROSPECTS;
+  snapshot = baseline;
   emit();
 }

@@ -1,4 +1,4 @@
-import { optionalServerEnv } from "@/lib/env";
+import { optionalServerEnv, serverFlagEnabled } from "@/lib/env";
 
 /**
  * DeepSeek configuration and the single HTTP call to it.
@@ -10,6 +10,16 @@ import { optionalServerEnv } from "@/lib/env";
  * change, and silently calling a model that does not exist produces a
  * confusing 400 rather than an obvious misconfiguration. Paste the exact id
  * from DeepSeek's own documentation into `DEEPSEEK_MODEL`.
+ *
+ * OFF BY DEFAULT — GDPR Chapter V. DeepSeek processes conversation content in
+ * China, which has no adequacy decision, and no transfer mechanism (Art. 46
+ * SCCs plus a transfer impact assessment) is in place yet. `complete()` cannot
+ * be reached without a `DeepSeekConfig`, and `readDeepSeekConfig()` is the only
+ * thing that produces one, so the flag check below is the single point that
+ * decides whether any conversation data can leave for `api.deepseek.com`.
+ * Credentials alone are not enough: `ASSISTANT_MODEL_ENABLED` must also be an
+ * explicit affirmative. Do not remove that condition until the transfer basis
+ * exists.
  */
 
 function assertServer(): void {
@@ -31,6 +41,12 @@ export interface DeepSeekConfig {
 
 export function readDeepSeekConfig(): DeepSeekConfig | null {
   assertServer();
+
+  // Checked before the credentials are even read: an API key left in the
+  // environment must never be sufficient on its own to start sending
+  // conversation data abroad.
+  if (!serverFlagEnabled("ASSISTANT_MODEL_ENABLED")) return null;
+
   const apiKey = optionalServerEnv("DEEPSEEK_API_KEY");
   const model = optionalServerEnv("DEEPSEEK_MODEL");
   if (!apiKey || !model) return null;

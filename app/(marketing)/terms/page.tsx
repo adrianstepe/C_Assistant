@@ -20,11 +20,11 @@ export const metadata: Metadata = {
  * Describes only what is actually offered and configured. No warranty,
  * uptime commitment, certification or refund guarantee is asserted.
  *
+ * Settled: the refund position is a full refund of the setup fee within 30 days
+ * where the assistant is not live on the customer's site, and the registered
+ * address and registration number are filled in (`lib/marketing/brand.ts`).
+ *
  * REVIEW BEFORE LAUNCH — decisions still needed:
- *  - Refund position on the setup fee. Left deliberately open below; the
- *    current wording promises nothing and invites contact, which is honest but
- *    is not a policy.
- *  - Registered address and registration number (`lib/marketing/brand.ts`).
  *  - VAT treatment of these sales (see `lib/pricing.ts`), which affects whether
  *    the stated prices are the amount a customer actually pays.
  *  - Whether a formal cancellation notice period applies.
@@ -67,6 +67,13 @@ export default function TermsPage() {
           company registered in {BRAND.jurisdiction}. They describe the service
           as it is actually offered today.
         </p>
+
+        {HAS_REGISTRATION_DETAILS ? (
+          <p className="text-slate-body mt-4 text-sm">
+            {BRAND.legalEntity}, registration number {BRAND.registrationNumber},
+            registered address {BRAND.registeredAddress}.
+          </p>
+        ) : null}
 
         {!HAS_REGISTRATION_DETAILS ? (
           <p className="mt-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -142,20 +149,18 @@ export default function TermsPage() {
             already paid for. After that, no further payments are taken.
           </p>
           <p className="border-hairline bg-mist rounded-lg border px-4 py-3 text-sm">
-            <strong className="font-semibold text-ink">
-              Refunds are not yet covered by a fixed policy.
-            </strong>{" "}
-            If something has gone wrong, or the service is not what you expected,
-            email{" "}
+            <strong className="font-semibold text-ink">Refunds.</strong> If the
+            assistant is not live on your site, you can have the{" "}
+            {SETUP_FEE_LABEL} setup fee back in full, provided you ask within 30
+            days of paying it. Email{" "}
             <a
               href={`mailto:${BRAND.contactEmail}`}
               className="rounded-md font-medium text-ink underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
               {BRAND.contactEmail}
             </a>{" "}
-            and we will deal with it individually. This section will be replaced
-            with a definite policy, and nothing here removes any statutory right
-            you may have.
+            and say so — you do not have to give a reason. Nothing here removes
+            any statutory right you may have.
           </p>
         </Section>
 

@@ -15,6 +15,7 @@ import {
   patchProspect,
   removeProspect,
   resetProspects,
+  setBaselineProspects,
   subscribeToProspects,
 } from "@/lib/prospects/store";
 import { StatsBar } from "./StatsBar";
@@ -46,7 +47,23 @@ function isTypingTarget(element: Element | null): element is HTMLElement {
   );
 }
 
-export function ProspectDashboard({ today }: { today: IsoDate }) {
+interface ProspectDashboardProps {
+  today: IsoDate;
+  /** The list parsed from `data/prospects.csv` on the server. */
+  initialProspects: Prospect[];
+  /** Rows the CSV parser could not read, reported rather than hidden. */
+  loadErrors: string[];
+}
+
+export function ProspectDashboard({
+  today,
+  initialProspects,
+  loadErrors,
+}: ProspectDashboardProps) {
+  // Before the first snapshot is read, so the server render and the hydration
+  // pass see the same list.
+  setBaselineProspects(initialProspects);
+
   const prospects = useSyncExternalStore(
     subscribeToProspects,
     getProspectsSnapshot,
@@ -91,7 +108,11 @@ export function ProspectDashboard({ today }: { today: IsoDate }) {
   }
 
   function handleReset() {
-    if (!window.confirm("Discard all local edits and restore the seed list?")) {
+    if (
+      !window.confirm(
+        "Discard all edits made in this browser and reload the list from data/prospects.csv?",
+      )
+    ) {
       return;
     }
     resetProspects();
@@ -158,8 +179,9 @@ export function ProspectDashboard({ today }: { today: IsoDate }) {
             Prospect tracker
           </h1>
           <p className="text-muted mt-0.5 text-sm">
-            UK commercial cleaning outreach. Edits are saved in this browser
-            only.
+            UK commercial cleaning outreach, loaded from{" "}
+            <code className="font-mono text-xs">data/prospects.csv</code>. Edits
+            are saved in this browser only.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -168,7 +190,7 @@ export function ProspectDashboard({ today }: { today: IsoDate }) {
             onClick={handleReset}
             className="border-border hover:bg-surface-hover rounded-md border px-2.5 py-1.5 text-xs font-medium"
           >
-            Reset data
+            Reload from file
           </button>
           <button
             type="button"
@@ -179,6 +201,34 @@ export function ProspectDashboard({ today }: { today: IsoDate }) {
           </button>
         </div>
       </div>
+
+      {loadErrors.length > 0 ? (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+          <p className="font-medium">
+            {loadErrors.length === 1
+              ? "One row could not be read from data/prospects.csv:"
+              : `${loadErrors.length} rows could not be read from data/prospects.csv:`}
+          </p>
+          <ul className="mt-1.5 list-disc space-y-0.5 pl-5">
+            {loadErrors.map((error) => (
+              <li key={error}>{error}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {initialProspects.length === 0 && loadErrors.length === 0 ? (
+        <div className="border-border text-muted rounded-lg border border-dashed px-4 py-6 text-sm">
+          <p className="text-ink font-medium">No prospects yet.</p>
+          <p className="mt-1">
+            Drop your outreach list into{" "}
+            <code className="font-mono text-xs">data/prospects.csv</code>{" "}
+            (keeping the header row) and reload this page. See{" "}
+            <code className="font-mono text-xs">data/README.md</code> for the
+            columns.
+          </p>
+        </div>
+      ) : null}
 
       <StatsBar stats={stats} />
 

@@ -88,13 +88,15 @@ branding and every `mailto:` on the site.
 **Still needing a factual decision before live trading** — each is marked with a
 `REVIEW BEFORE LAUNCH` comment in the file concerned:
 
-1. `BRAND.legalEntity` is the trading name. If the business trades through a
-   registered company, the registered name, address and number belong on
-   `/privacy` and `/terms`.
-2. VAT treatment of these sales (`lib/pricing.ts`). The copy is deliberately
-   neutral until this is confirmed.
-3. The refund position on the setup fee (`/terms`). Currently states there is no
-   fixed policy and invites contact, which is honest but is not a policy.
+1. VAT treatment of these sales (`lib/pricing.ts`, marked `REVIEW BEFORE LIVE
+   CHARGING`). The copy is deliberately neutral until this is confirmed.
+2. The GDPR Chapter V transfer basis for DeepSeek (`/privacy` section 5). The
+   live model is switched off by default until this exists — see `CLAUDE.md`.
+
+Settled: the registered name, address and number are in `lib/marketing/brand.ts`
+and render on `/privacy` and `/terms`; the refund position is a full refund of
+the setup fee within 30 days where the assistant is not live on the customer's
+site.
 
 **Theming.** The marketing palette (`--color-ink`, `--color-brand`, …) is fixed,
 not theme-aware — the public site should look the same to everyone. Dark mode is
@@ -120,9 +122,22 @@ lead with the JSON an integration would receive.
 
 ### How the model fits in
 
-Set `DEEPSEEK_API_KEY` and `DEEPSEEK_MODEL` and the demo routes through
-`/api/assistant`, which calls DeepSeek. Leave them unset and it runs entirely on
-the deterministic engine in `lib/ai/demo-engine.ts`. Both work.
+> **The live model is off by default and must stay off in production.**
+> `ASSISTANT_MODEL_ENABLED` gates it, and anything other than an explicit
+> `true`/`1`/`yes` — including unset — means off. DeepSeek processes
+> conversation content in China and there is no GDPR Chapter V transfer basis in
+> place yet. See the note in `CLAUDE.md` before changing this.
+
+With `ASSISTANT_MODEL_ENABLED=true` **and** both `DEEPSEEK_API_KEY` and
+`DEEPSEEK_MODEL` set, the demo routes through `/api/assistant`, which calls
+DeepSeek. With the flag off — the default — it runs entirely on the
+deterministic engine in `lib/ai/demo-engine.ts`. Both work.
+
+The flag is checked at the top of `readDeepSeekConfig()`, before the credentials
+are read. That function is the only thing that produces a `DeepSeekConfig`, and
+`complete()` needs one to know where to `fetch`, so credentials left in the
+environment cannot on their own cause a single request to leave for
+`api.deepseek.com`.
 
 **The model does not drive the conversation.** It may *propose* what the
 customer just said and suggest wording; every proposed value is normalised
@@ -315,7 +330,8 @@ Deploys to Vercel with no extra configuration. Before the first deploy, set:
 | `NEXT_PUBLIC_SITE_URL` | **Required.** The real public URL, no trailing slash. |
 | `ADMIN_USERNAME`, `ADMIN_PASSWORD` | Otherwise `/admin` returns 503. |
 | `STRIPE_SECRET_KEY`, `STRIPE_PRICE_SETUP`, `STRIPE_PRICE_MONTHLY` | Otherwise checkout is disabled in production. |
-| `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL` | Optional. Without them the assistant runs offline. |
+| `ASSISTANT_MODEL_ENABLED` | Leave unset. Off by default; must stay off until a GDPR Chapter V transfer basis exists. |
+| `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL` | Optional, and inert while the flag above is off. Without them the assistant runs offline. |
 
 `NEXT_PUBLIC_SITE_URL` matters more than it looks. Without it the app falls
 back to Vercel's deployment URL, and in local development to
