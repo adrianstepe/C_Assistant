@@ -56,7 +56,7 @@ const LABELS: Record<FieldKey, string> = {
   contactName: "Contact name",
   email: "Email",
   phone: "Phone",
-  leadEmail: "Send leads to",
+  leadEmail: "Send enquiries to",
   serviceAreas: "Service areas",
   services: "Typical cleaning services",
   notes: "Anything else",
@@ -166,9 +166,9 @@ export function OnboardingForm() {
           Your setup details are ready
         </h2>
         <p className="text-slate-body mt-2 text-sm leading-relaxed">
-          We haven&rsquo;t built the part that stores this automatically yet, so
-          nothing has been sent anywhere. Send it across and we&rsquo;ll start
-          configuring your assistant.
+          We haven&rsquo;t built the part that stores this yet, so nothing has
+          been sent anywhere. Send it across and we&rsquo;ll start configuring{" "}
+          {BRAND.name}.
         </p>
 
         <pre className="border-hairline bg-mist mt-5 overflow-x-auto rounded-lg border px-4 py-3 text-xs leading-relaxed whitespace-pre-wrap text-ink">
@@ -217,7 +217,7 @@ export function OnboardingForm() {
       className="border-hairline rounded-lg border bg-white p-6 sm:p-8"
     >
       <h2 className="text-lg font-semibold text-ink">
-        Set up your assistant
+        Set up {BRAND.name}
       </h2>
       <p className="text-slate-body mt-2 text-sm leading-relaxed">
         This is everything we need to configure it for your business. It takes
@@ -302,7 +302,7 @@ export function OnboardingForm() {
 
       <fieldset className="mt-6">
         <legend className="text-xs font-semibold tracking-[0.12em] text-ink uppercase">
-          What the assistant needs to know
+          What {BRAND.name} needs to know
         </legend>
         <div className="mt-4 grid gap-4">
           <AreaField
@@ -328,7 +328,7 @@ export function OnboardingForm() {
             rows={3}
             value={values.notes}
             error={errors.notes}
-            hint="Anything you always ask customers, work you don't take on, or how you'd like leads formatted."
+            hint="Anything you always ask customers, work you don't take on, or how you'd like enquiries formatted."
             onChange={update}
           />
         </div>

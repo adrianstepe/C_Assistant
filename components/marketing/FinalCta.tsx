@@ -15,8 +15,8 @@ export function FinalCta() {
           See how it works before you talk to anyone.
         </h2>
         <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-pretty text-white/70 sm:text-lg">
-          Send it an enquiry the way one of your customers would, and read the
-          lead it produces. No form, no call, no commitment.
+          Send it an enquiry the way one of your customers would, and read what
+          it hands over. No form, no call, no commitment.
         </p>
 
         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">

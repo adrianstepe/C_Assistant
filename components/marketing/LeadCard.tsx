@@ -27,7 +27,7 @@ export function LeadCard() {
         <header className="border-hairline flex items-start justify-between gap-3 border-b px-5 py-4">
           <div>
             <h3 className="font-display text-base font-semibold text-ink">
-              New qualified lead
+              New enquiry, ready to price
             </h3>
             <p className="text-slate-body mt-0.5 font-mono text-xs">
               {HERO_LEAD.reference} · {HERO_LEAD.receivedAt}

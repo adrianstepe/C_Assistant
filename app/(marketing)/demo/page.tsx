@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { QuoteAssistantDemo } from "@/components/demo/QuoteAssistantDemo";
 import { Container } from "@/components/marketing/primitives";
+import { BRAND } from "@/lib/marketing/brand";
 import { isAssistantModelEnabled } from "@/lib/ai/deepseek";
 
 export const metadata: Metadata = {
-  title: "Try the quote assistant",
-  description:
-    "Send a cleaning enquiry the way one of your customers would, and watch it turn into a structured, qualified lead.",
+  // Not "Try {BRAND.name}": the root title template already appends the brand,
+  // so naming it here renders "Try Linwick | Linwick".
+  title: "Try the demo",
+  description: `Send a cleaning enquiry the way one of your customers would, and read what ${BRAND.name} hands over. No signup, no sales call.`,
 };
 
 // Whether the model is configured is a server-side fact, so this page cannot
@@ -27,10 +29,10 @@ export default function DemoPage() {
           Try it as if you were the customer.
         </h1>
         <p className="text-slate-body mt-5 text-lg leading-relaxed text-pretty">
-          You are playing the part of someone enquiring about cleaning. The
-          assistant is answering on behalf of a cleaning company. In real use,
-          that would be yours. Answer however you like; it copes with whatever
-          you type.
+          You are playing the part of someone enquiring about cleaning.{" "}
+          {BRAND.name} is answering on behalf of a cleaning company. In real
+          use, that would be yours. Answer however you like; it copes with
+          whatever you type.
         </p>
       </div>
 

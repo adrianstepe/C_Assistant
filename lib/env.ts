@@ -58,6 +58,8 @@ export function serverFlagEnabled(name: ServerEnvVar): boolean {
   return value === "true" || value === "1" || value === "yes";
 }
 
+import { CANONICAL_ORIGIN } from "@/lib/marketing/brand";
+
 const DEV_FALLBACK_SITE_URL = "http://localhost:3000";
 
 function stripTrailingSlash(value: string): string {
@@ -70,19 +72,50 @@ function stripTrailingSlash(value: string): string {
  *
  * Resolution order, and why:
  *
- * 1. `NEXT_PUBLIC_SITE_URL` — the canonical domain. Always set this in
- *    production; nothing else knows which of several possible hosts is the one
- *    you want indexed.
- * 2. `NEXT_PUBLIC_VERCEL_URL` — the deployment host, supplied automatically by
- *    Vercel. Not the canonical domain, but never *wrong* the way localhost is.
- * 3. `http://localhost:3000` — development only.
+ * 1. **A production deployment always uses `CANONICAL_ORIGIN`.** Which domain
+ *    the public site is indexed under is a fact about the brand, and the repo
+ *    knows it. Deriving it from a dashboard variable is how the live site came
+ *    to publish a canonical tag and an `og:url` pointing at a preview
+ *    deployment: the variable had been set once, to a hostname that was right
+ *    at the time, and nothing could detect that it had stopped being right.
+ *    A wrong canonical is worse than a missing one, so this is not left to
+ *    configuration that can drift.
+ * 2. `NEXT_PUBLIC_SITE_URL` — for any non-production deployment that needs to
+ *    state a specific host.
+ * 3. `NEXT_PUBLIC_VERCEL_URL` — the deployment host, supplied automatically by
+ *    Vercel. Correct for previews, which should never claim to be the canonical
+ *    site.
+ * 4. `http://localhost:3000` — development only.
  *
- * Returning `null` rather than falling back to localhost in production is the
- * whole point: a canonical tag or a Stripe return URL pointing at localhost is
- * worse than one that is absent, because it silently sends real customers and
- * search engines nowhere.
+ * Returning `null` rather than falling back to localhost is the whole point of
+ * the last step: a canonical tag or a Stripe return URL pointing at localhost
+ * silently sends real customers and search engines nowhere.
+ *
+ * `VERCEL_ENV` is Vercel's own signal and is `"production"` only for the
+ * production deployment; previews report `"preview"`. `NODE_ENV` cannot stand
+ * in for it, because a preview build is also `NODE_ENV === "production"`.
+ *
+ * Both spellings are checked deliberately. `VERCEL_ENV` is always present on
+ * Vercel; the `NEXT_PUBLIC_` mirror only exists when the project has "expose
+ * system environment variables" switched on. Reading just the public one would
+ * mean this whole guard silently does nothing on a project where that setting
+ * is off, which is the exact class of quiet misconfiguration it exists to end.
+ *
+ * Keeping previews on their own hostname matters beyond SEO: `siteOrigin()` in
+ * `lib/stripe/config.ts` builds Stripe's success and cancel URLs from this, so
+ * a preview that claimed the canonical origin would hand a tester back to the
+ * production site mid-checkout.
  */
+function isProductionDeployment(): boolean {
+  return (
+    process.env.VERCEL_ENV === "production" ||
+    process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
+  );
+}
+
 export function resolveSiteUrl(): string | null {
+  if (isProductionDeployment()) return stripTrailingSlash(CANONICAL_ORIGIN);
+
   const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (configured) return stripTrailingSlash(configured);
 

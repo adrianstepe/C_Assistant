@@ -68,7 +68,7 @@ export function Composer({
 
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <label htmlFor="demo-message" className="sr-only">
-          Your message to the quote assistant
+          Your message, as the customer
         </label>
         <input
           id="demo-message"

@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { BRAND_NAME } from "@/lib/marketing/brand";
 import type { StripeConfig } from "./config";
 
 /**
@@ -18,7 +19,7 @@ export function getStripeClient(config: Pick<StripeConfig, "secretKey">): Stripe
   if (cached?.key === config.secretKey) return cached.client;
   const client = new Stripe(config.secretKey, {
     typescript: true,
-    appInfo: { name: "AI Quote Assistant" },
+    appInfo: { name: BRAND_NAME },
   });
   cached = { key: config.secretKey, client };
   return client;

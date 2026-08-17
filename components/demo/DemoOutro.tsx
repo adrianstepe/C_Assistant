@@ -25,7 +25,7 @@ export function DemoOutro({ onRestart }: { onRestart: () => void }) {
           id="demo-outro-heading"
           className="mx-auto max-w-2xl text-2xl font-semibold tracking-tight text-balance text-white sm:text-3xl"
         >
-          Imagine every quote enquiry being handled like this automatically.
+          Every enquiry from your website, handled like this.
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-pretty text-white/70">
           Same questions, same structure, every time, at two in the morning or

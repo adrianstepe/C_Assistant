@@ -2,9 +2,11 @@
  * The offer, in one place.
  *
  * Amounts are in pence so they can be compared with Stripe without floating
- * point surprises. Nothing here is secret — this file is safe to import from
+ * point surprises. Nothing here is secret: this file is safe to import from
  * client components, and the price *ids* live in the environment, not here.
  */
+
+import { BRAND_NAME } from "@/lib/marketing/brand";
 
 export interface Money {
   /** Pence. */
@@ -26,7 +28,12 @@ export const MONTHLY_FEE: Money = { amount: 7_900, currency: "GBP" };
 export const SETUP_FEE_LABEL = formatMoney(SETUP_FEE);
 export const MONTHLY_FEE_LABEL = formatMoney(MONTHLY_FEE);
 
-export const PRODUCT_NAME = "AI Quote Assistant";
+/**
+ * Re-exported rather than redefined. There used to be a second product name
+ * here, which is how the site ended up able to disagree with itself about what
+ * it was selling.
+ */
+export { BRAND_NAME as PRODUCT_NAME } from "@/lib/marketing/brand";
 
 export interface PlanFeature {
   title: string;
@@ -34,27 +41,27 @@ export interface PlanFeature {
 }
 
 /**
- * What the customer actually gets. Deliberately mechanical — every line
+ * What the customer actually gets. Deliberately mechanical: every line
  * describes something the product does, not an outcome it cannot guarantee.
  */
 export const PLAN_FEATURES: readonly PlanFeature[] = [
   {
-    title: "Instant handling of incoming enquiries",
+    title: "Enquiries answered on arrival",
     description:
       "Enquiries from your website get a reply straight away, at any hour, instead of waiting for someone to be free.",
   },
   {
-    title: "Qualification questions",
+    title: "The questions a price depends on",
     description:
-      "The assistant asks the things a price depends on — premises, size, frequency, access times, current arrangement.",
+      "Premises type, floor area, frequency, access times, what they have in place now, and anything unusual about the site.",
   },
   {
-    title: "Structured lead capture",
+    title: "Structured enquiry capture",
     description:
       "Answers are turned into consistent fields rather than a paragraph of free text your team has to unpick.",
   },
   {
-    title: "Lead notification",
+    title: "Enquiry notification",
     description:
       "Each completed enquiry is emailed to whoever you nominate, with the full conversation attached.",
   },
@@ -74,8 +81,8 @@ export const PLAN_FEATURES: readonly PlanFeature[] = [
 export const PLAN_TERMS: readonly string[] = [
   `${SETUP_FEE_LABEL} setup is charged once, on your first invoice, and covers configuration and going live.`,
   `${MONTHLY_FEE_LABEL} per month starts at the same time and recurs monthly until you cancel.`,
-  "Monthly rolling — there is no minimum term and no cancellation fee.",
-  "Cancel whenever you like; the assistant keeps running until the end of the month you have paid for.",
+  "Monthly rolling. There is no minimum term and no cancellation fee.",
+  `Cancel whenever you like; ${BRAND_NAME} keeps running until the end of the month you have paid for.`,
   // REVIEW BEFORE LIVE CHARGING: neutral by design. The VAT treatment of these
   // sales has not been confirmed and depends on where the business is
   // established, its registration status and the customer's status. Do not

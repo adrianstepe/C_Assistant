@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { BRAND } from "@/lib/marketing/brand";
+import { MONTHLY_FEE_LABEL, SETUP_FEE_LABEL } from "@/lib/pricing";
 import { publicEnv } from "@/lib/env";
 import "./globals.css";
 
@@ -46,8 +47,7 @@ const data = localFont({
   ],
 });
 
-const description =
-  "A quote assistant for UK commercial cleaning companies. It answers website enquiries in seconds, asks the questions a price depends on, and sends your team a structured, qualified lead.";
+const description = `${BRAND.name} answers new enquiries on your website instantly and asks what your estimator needs. It never gives a price. ${SETUP_FEE_LABEL} setup, ${MONTHLY_FEE_LABEL} a month.`;
 
 const { siteUrl } = publicEnv;
 
@@ -79,7 +79,6 @@ export const metadata: Metadata = {
     "commercial cleaning software",
     "cleaning quote software",
     "cleaning enquiry management",
-    "lead qualification for cleaning companies",
     "UK commercial cleaning",
   ],
   openGraph: {

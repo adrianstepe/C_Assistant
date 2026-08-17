@@ -7,7 +7,7 @@ import { Container } from "@/components/marketing/primitives";
 
 export const metadata: Metadata = {
   title: "Privacy notice",
-  description: `How ${BRAND.legalEntity} handles personal data collected through this website and the AI Quote Assistant.`,
+  description: `How ${BRAND.legalEntity} handles personal data collected through this website and ${BRAND.name}.`,
 };
 
 // The notice states which processors are actually in use, which depends on
@@ -76,7 +76,7 @@ export default function PrivacyPage() {
         <p className="text-slate-body mt-4 text-sm">Last reviewed: {LAST_REVIEWED}</p>
         <p className="text-slate-body mt-5 text-lg leading-relaxed text-pretty">
           This notice explains what personal data {BRAND.legalEntity} collects
-          through this website and the AI Quote Assistant, why we collect it,
+          through this website and {BRAND.name}, why we collect it,
           who it is shared with, and what rights you have. It describes the
           service as it currently works.
         </p>
@@ -160,8 +160,8 @@ export default function PrivacyPage() {
             <strong className="font-medium text-ink">
               Enquiries from your customers, if you are a customer of ours.
             </strong>{" "}
-            When the assistant runs on your website, it processes what the person
-            enquiring types in order to produce a structured lead for you. For
+            When {BRAND.name} runs on your website, it processes what the person
+            enquiring types in order to produce a structured enquiry for you. For
             that data <em>you</em> are the controller and we act as your
             processor. See section 7.
           </p>
@@ -197,7 +197,7 @@ export default function PrivacyPage() {
               <li>
                 <strong className="font-medium text-ink">DeepSeek:</strong> the AI
                 model that generates assistant replies. Message content typed into
-                the assistant is sent to DeepSeek for processing.
+                {BRAND.name} is sent to DeepSeek for processing.
               </li>
             ) : null}
             <li>
@@ -215,8 +215,8 @@ export default function PrivacyPage() {
           <p>
             We are established in {BRAND.jurisdiction}, in the EU. Some of our
             providers process data outside the European Economic Area: Vercel
-            in the United States, and, where the AI assistant is enabled,
-            DeepSeek in China.
+            in the United States, and, where the optional AI model behind{" "}
+            {BRAND.name} is enabled, DeepSeek in China.
           </p>
           <p>
             Transfers to countries without an adequacy decision require
@@ -230,7 +230,7 @@ export default function PrivacyPage() {
             </strong>{" "}
             our transfer safeguards for AI processing are not yet finalised.
             Until they are, do not type personal data about identifiable people
-            into the assistant. If this affects a decision you are making about
+            into {BRAND.name}. If this affects a decision you are making about
             using us, email <Mail /> and ask. We will tell you exactly where
             things stand rather than give you a reassuring non-answer.
           </p>
@@ -257,7 +257,7 @@ export default function PrivacyPage() {
 
         <Section id="processor" heading="7. When we act as your processor">
           <p>
-            If you buy the assistant, the enquiries it collects on your website
+            If you buy {BRAND.name}, the enquiries it collects on your website
             are your data. You decide why and how they are processed; we process
             them on your instructions in order to provide the service. That makes
             you the controller and us your processor under Art. 28.

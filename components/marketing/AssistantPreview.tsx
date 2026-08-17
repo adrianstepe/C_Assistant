@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   LOOP_PAUSE_MS,
+  PREVIEW_COMPANY,
   PREVIEW_STEPS,
   STEP_DURATION_MS,
 } from "@/lib/marketing/preview-script";
@@ -12,7 +13,7 @@ import { TypingDots } from "@/components/ui/TypingDots";
 const TOTAL = PREVIEW_STEPS.length;
 
 /**
- * Scripted product preview: the conversation on the left, the lead being
+ * Scripted product preview: the conversation on the left, the enquiry being
  * assembled on the right.
  *
  * The animated view is `aria-hidden` and paired with a complete static
@@ -107,7 +108,7 @@ export function AssistantPreview() {
                         isCustomer ? "text-slate-body" : "text-white/55"
                       }`}
                     >
-                      {isCustomer ? "Customer" : "Assistant"}
+                      {isCustomer ? "Customer" : PREVIEW_COMPANY}
                     </p>
                     {entry.message.text}
                   </div>
@@ -125,11 +126,11 @@ export function AssistantPreview() {
           </div>
         </div>
 
-        {/* Extracted lead */}
+        {/* The fields extracted so far. */}
         <div aria-hidden="true" className="bg-mist/40 px-4 py-4 sm:px-5">
           <div className="flex items-center justify-between gap-2">
             <h3 className="text-xs font-semibold tracking-[0.12em] text-ink uppercase">
-              Qualified lead
+              Ready to price
             </h3>
             <span className="text-slate-body font-mono text-xs tabular-nums">
               {fields.length} fields
@@ -175,13 +176,16 @@ export function AssistantPreview() {
           {PREVIEW_STEPS.map((entry, index) => (
             <li key={index}>
               <strong>
-                {entry.message.role === "customer" ? "Customer" : "Assistant"}:
+                {entry.message.role === "customer"
+                  ? "Customer"
+                  : PREVIEW_COMPANY}
+                :
               </strong>{" "}
               {entry.message.text}
             </li>
           ))}
         </ol>
-        <h3>Qualified lead produced from this conversation</h3>
+        <h3>Details captured from this conversation</h3>
         <dl>
           {PREVIEW_STEPS.flatMap((entry) => entry.fields ?? []).map((field) => (
             <div key={field.label}>

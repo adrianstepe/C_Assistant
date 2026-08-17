@@ -22,7 +22,7 @@ export function CheckoutButton({ mode }: { mode: CheckoutMode }) {
     return (
       <div>
         <a
-          href={`mailto:${BRAND.contactEmail}?subject=${encodeURIComponent("AI Quote Assistant — I'd like to get set up")}`}
+          href={`mailto:${BRAND.contactEmail}?subject=${encodeURIComponent(`${BRAND.name}: I'd like to get set up`)}`}
           onClick={() =>
             track({
               name: "cta_clicked",
@@ -54,7 +54,7 @@ export function CheckoutButton({ mode }: { mode: CheckoutMode }) {
         }
         className={`${primaryButton} w-full justify-center disabled:cursor-not-allowed disabled:opacity-60`}
       >
-        {isPending ? "Taking you to checkout…" : "Get set up — start checkout"}
+        {isPending ? "Taking you to checkout…" : "Get set up"}
       </button>
 
       <p className="text-slate-body mt-3 text-center text-xs">

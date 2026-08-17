@@ -123,7 +123,7 @@ export default async function CheckoutSuccessPage({
           },
           {
             step: "02",
-            title: "We configure your assistant",
+            title: `We configure ${BRAND.name}`,
             body: "We set up your services, areas and questions, then send you a link to review it.",
           },
           {

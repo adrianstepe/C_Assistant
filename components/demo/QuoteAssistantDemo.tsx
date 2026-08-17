@@ -111,7 +111,7 @@ export function QuoteAssistantDemo({ useModel = false }: { useModel?: boolean })
     } catch {
       dispatch({
         type: "failed",
-        message: "The assistant didn't respond. That's on us. Try again.",
+        message: "Nothing came back. That's on us. Try again.",
       });
     } finally {
       inFlight.current = false;
@@ -190,7 +190,7 @@ export function QuoteAssistantDemo({ useModel = false }: { useModel?: boolean })
                     className="size-1.5 rounded-full bg-brand"
                     aria-hidden="true"
                   />
-                  Quote assistant
+                  Enquiries
                 </p>
               </div>
             </div>
@@ -208,7 +208,7 @@ export function QuoteAssistantDemo({ useModel = false }: { useModel?: boolean })
             ref={transcriptRef}
             role="log"
             aria-live="polite"
-            aria-label="Conversation with the quote assistant"
+            aria-label={`Conversation with ${DEMO_COMPANY}`}
             className="h-[24rem] space-y-3 overflow-y-auto px-3 py-4 sm:h-[30rem] sm:px-4"
           >
             {state.messages.map((message, index) => (
@@ -226,7 +226,7 @@ export function QuoteAssistantDemo({ useModel = false }: { useModel?: boolean })
               <div className="animate-message-in flex justify-start">
                 <div className="border-hairline bg-mist rounded-2xl rounded-bl-md border px-4 py-3">
                   <TypingDots />
-                  <span className="sr-only">The assistant is typing</span>
+                  <span className="sr-only">{DEMO_COMPANY} is typing</span>
                 </div>
               </div>
             ) : null}
@@ -259,7 +259,7 @@ export function QuoteAssistantDemo({ useModel = false }: { useModel?: boolean })
           {isComplete ? (
             <div className="border-hairline flex flex-wrap items-center justify-between gap-3 border-t bg-white px-4 py-3">
               <p className="text-slate-body text-xs">
-                Conversation finished. The lead is ready.
+                Conversation finished. The enquiry is ready to price.
               </p>
               <button
                 type="button"

@@ -8,7 +8,7 @@ export function BenefitsSection() {
         <SectionHeading
           eyebrow="What changes"
           title="Less chasing, better briefs, fewer enquiries that quietly die."
-          lead="No promises about your conversion rate. That depends on your prices and your patch. These are the things the assistant actually does."
+          lead="No promises about your conversion rate. That depends on your prices and your patch. These are the things Linwick actually does."
         />
 
         <ul className="mt-12 grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">

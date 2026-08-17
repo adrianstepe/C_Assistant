@@ -45,7 +45,7 @@ export function WorkflowSection() {
       <Container className="py-20 sm:py-28">
         <SectionHeading
           eyebrow="The solution"
-          title="One path, from “can you quote this?” to a lead your team can price."
+          title="One path, from “can you quote this?” to an enquiry your team can price."
           lead="No new inbox to watch. No process for your supervisors to remember. It runs on the enquiries your website already receives."
         />
 

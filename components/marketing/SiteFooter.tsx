@@ -1,8 +1,21 @@
 import Link from "next/link";
-import { BRAND, FOOTER_LINKS } from "@/lib/marketing/brand";
+import { ATTRIBUTION, BRAND, FOOTER_LINKS } from "@/lib/marketing/brand";
 import { Container } from "./primitives";
 import { Wordmark } from "./Wordmark";
 
+/**
+ * The footer carries the company disclosure, in text, on every page.
+ *
+ * Two names appear on this site: the product is Linwick, the seller is a
+ * Latvian company, and the contact address is on a third domain again. Stated
+ * plainly and together, that reads as an ordinary trading arrangement. Left
+ * implicit, it reads as a mistake, which is expensive on a page asking a
+ * stranger for a card number. It is also roughly what UK distance-selling
+ * disclosure expects to be findable before purchase: trading name, legal
+ * identity, geographic address, working contact route.
+ *
+ * Not behind a link, and not only on /terms.
+ */
 export function SiteFooter() {
   const year = new Date().getFullYear();
 
@@ -13,9 +26,8 @@ export function SiteFooter() {
           <div className="max-w-xs">
             <Wordmark />
             <p className="text-slate-body mt-4 text-sm leading-relaxed">
-              A quote assistant for UK commercial cleaning companies. It answers
-              enquiries, asks the right questions and passes your team a lead
-              they can price.
+              {BRAND.name} answers new enquiries on your website and asks the
+              questions a price depends on. It never gives a price.
             </p>
           </div>
 
@@ -40,21 +52,25 @@ export function SiteFooter() {
               </ul>
             </nav>
 
-            <div>
+            <div className="max-w-xs">
               <h2 className="text-xs font-semibold tracking-[0.14em] text-ink uppercase">
-                Contact
+                Company
               </h2>
-              <ul className="mt-2 space-y-0.5">
-                <li>
-                  <a
-                    href={`mailto:${BRAND.contactEmail}`}
-                    className="text-slate-body inline-block rounded-md py-2 text-sm transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
-                  >
-                    {BRAND.contactEmail}
-                  </a>
-                </li>
-                <li className="text-slate-body py-2 text-sm">United Kingdom</li>
-              </ul>
+              <address className="text-slate-body mt-2 text-sm leading-relaxed not-italic">
+                <span className="block font-medium text-ink">
+                  {ATTRIBUTION}
+                </span>
+                <span className="mt-1 block">{BRAND.registeredAddress}</span>
+                <span className="block">
+                  Reg. no. {BRAND.registrationNumber}
+                </span>
+                <a
+                  href={`mailto:${BRAND.contactEmail}`}
+                  className="mt-1 inline-block rounded-md py-1 transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+                >
+                  {BRAND.contactEmail}
+                </a>
+              </address>
             </div>
           </div>
         </div>

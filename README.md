@@ -172,8 +172,8 @@ button that went nowhere would undo the credibility the demo just earned.
 `subscription` mode — Stripe puts a one-time price on the first invoice, which
 is exactly this arrangement. Amounts and copy live in `lib/pricing.ts`.
 
-**To switch it on**, create two Stripe products — "AI Quote Assistant — Setup"
-(£149 one-off) and "AI Quote Assistant — Monthly" (£79/month) — and set
+**To switch it on**, create two Stripe products — "Linwick: Setup"
+(£149 one-off) and "Linwick: Monthly" (£79/month) — and set
 `STRIPE_SECRET_KEY`, `STRIPE_PRICE_SETUP` and `STRIPE_PRICE_MONTHLY`. Use
 `sk_test_…` until you mean it. Without all three, checkout falls back to
 dev-preview locally and is disabled in production.

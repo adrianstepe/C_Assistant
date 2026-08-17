@@ -3,10 +3,12 @@
  * edited as prose rather than hunted through JSX.
  */
 
+import { BRAND_NAME } from "./brand";
+
 export interface TimelineEntry {
   time: string;
   event: string;
-  /** Marks the moment the lead is effectively lost. */
+  /** Marks the moment the enquiry is effectively lost. */
   lost?: boolean;
 }
 
@@ -48,7 +50,7 @@ export const WORKFLOW_STEPS: readonly WorkflowStep[] = [
       "Someone asks for a quote through your website, at any hour of the day.",
   },
   {
-    title: "The assistant replies",
+    title: `${BRAND_NAME} replies`,
     description:
       "Straight away, in your company’s name: no queue, no voicemail.",
   },
@@ -63,7 +65,7 @@ export const WORKFLOW_STEPS: readonly WorkflowStep[] = [
       "Free text becomes fields: service, floor area, schedule, contact.",
   },
   {
-    title: "You get a lead you can quote",
+    title: "You get an enquiry you can quote",
     description:
       "A complete summary lands with your team, ready to price or bin.",
   },
@@ -117,8 +119,7 @@ export const HOW_IT_WORKS: readonly HowItWorksStep[] = [
   {
     number: "01",
     title: "Connect",
-    description:
-      "Add the assistant to your existing website. No rebuild, no new enquiry form for your customers to learn.",
+    description: `Add ${BRAND_NAME} to your existing website. No rebuild, no new enquiry form for your customers to learn.`,
   },
   {
     number: "02",
@@ -130,7 +131,7 @@ export const HOW_IT_WORKS: readonly HowItWorksStep[] = [
     number: "03",
     title: "Receive qualified enquiries",
     description:
-      "Structured leads arrive by email, with the full conversation attached if you want to read it.",
+      "Structured enquiries arrive by email, with the full conversation attached if you want to read it.",
   },
 ];
 

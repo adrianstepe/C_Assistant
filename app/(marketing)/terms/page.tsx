@@ -102,8 +102,8 @@ export default function TermsPage() {
         <Section heading="The demo is a demonstration">
           <p>
             The demo on this website is a scripted demonstration running in your
-            browser. It shows how the assistant behaves and what the resulting
-            lead looks like. It is not connected to a live cleaning company, it
+            browser. It shows how {PRODUCT_NAME} behaves and what the resulting
+            enquiry looks like. It is not connected to a live cleaning company, it
             does not create real enquiries, and the example conversation, company
             and contact details in it are fictional.
           </p>
@@ -129,14 +129,14 @@ export default function TermsPage() {
 
         <Section heading="Setup and going live">
           <p>
-            After payment we ask you for the details needed to configure the
-            assistant: your services, the areas you cover, and the questions you
-            want asked. We configure it from those answers and provide it for you
-            to add to your website.
+            After payment we ask you for the details needed to configure{" "}
+            {PRODUCT_NAME}: your services, the areas you cover, and the
+            questions you want asked. We configure it from those answers and
+            provide it for you to add to your website.
           </p>
           <p>
-            Going live depends on receiving that information from you, and on
-            the assistant being added to your site. Until both have happened,
+            Going live depends on receiving that information from you, and on{" "}
+            {PRODUCT_NAME} being added to your site. Until both have happened,
             the service is in setup rather than in use.
           </p>
         </Section>
@@ -144,13 +144,13 @@ export default function TermsPage() {
         <Section heading="Cancelling">
           <p>
             The subscription is monthly and rolling. There is no minimum term
-            and no cancellation fee. You can cancel at any time, and the
-            assistant continues to run until the end of the month you have
+            and no cancellation fee. You can cancel at any time, and{" "}
+            {PRODUCT_NAME} continues to run until the end of the month you have
             already paid for. After that, no further payments are taken.
           </p>
           <p className="border-hairline bg-mist rounded-lg border px-4 py-3 text-sm">
-            <strong className="font-semibold text-ink">Refunds.</strong> If the
-            assistant is not live on your site, you can have the{" "}
+            <strong className="font-semibold text-ink">Refunds.</strong> If{" "}
+            {PRODUCT_NAME} is not live on your site, you can have the{" "}
             {SETUP_FEE_LABEL} setup fee back in full, provided you ask within 30
             days of paying it. Email{" "}
             <a
@@ -159,15 +159,15 @@ export default function TermsPage() {
             >
               {BRAND.contactEmail}
             </a>{" "}
-            and say so — you do not have to give a reason. Nothing here removes
-            any statutory right you may have.
+            and say so. You do not have to give a reason, and nothing here
+            removes any statutory right you may have.
           </p>
         </Section>
 
         <Section heading="What we do not promise">
           <p>
             We do not guarantee any particular number of enquiries, conversion
-            rate or level of new business. The assistant handles the enquiries
+            rate or level of new business. {PRODUCT_NAME} handles the enquiries
             your website receives; how many of those there are, and whether they
             become work, depends on your market and your prices.
           </p>
@@ -181,7 +181,7 @@ export default function TermsPage() {
         <Section heading="Your responsibilities">
           <p>
             You are responsible for the accuracy of the information you give us
-            for setup, for the content of the answers the assistant is
+            for setup, for the content of the answers {PRODUCT_NAME} is
             configured to give on your behalf, and for how you use the enquiries
             it passes to you, including complying with data protection law when
             you contact the people who made them.
@@ -190,7 +190,7 @@ export default function TermsPage() {
 
         <Section heading="Data protection">
           <p>
-            Enquiries the assistant collects on your website are your data. You
+            Enquiries {PRODUCT_NAME} collects on your website are your data. You
             are the controller and we act as your processor. Article 28 of the
             GDPR requires a written data processing agreement between us before
             that processing begins. Ask for ours at{" "}

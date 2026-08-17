@@ -9,6 +9,17 @@
  * story and the eventual data model stay in step.
  */
 
+/**
+ * The fictional cleaning company whose enquiries these are.
+ *
+ * Matches the demo at `/demo`, so a visitor who reads the preview and then
+ * plays the demo meets one invented firm rather than two. In real use this is
+ * the customer's own name, which is why the transcript is labelled with a
+ * company rather than with a role: that is how the conversation would actually
+ * appear to the person enquiring.
+ */
+export const PREVIEW_COMPANY = "Meridian Cleaning";
+
 export interface PreviewMessage {
   role: "customer" | "assistant";
   text: string;

@@ -1,4 +1,9 @@
 import Link from "next/link";
+import {
+  HERO_EYEBROW,
+  HERO_REASSURANCE,
+  HERO_SUBHEAD,
+} from "@/lib/marketing/hero";
 import { Container, primaryButton, secondaryButton } from "./primitives";
 import { LeadCard } from "./LeadCard";
 
@@ -15,17 +20,34 @@ export function Hero() {
           <div>
             <p className="border-hairline text-slate-body inline-flex items-center gap-2 border bg-white px-3 py-1 text-xs font-medium">
               <span className="bg-brand inline-block size-2" aria-hidden="true" />
-              For UK commercial cleaning companies
+              {HERO_EYEBROW}
             </p>
 
-            <h1 className="font-display mt-5 text-[2.75rem] leading-[1.03] font-semibold tracking-[-0.01em] text-balance text-ink sm:text-6xl lg:text-[4rem]">
-              Every cleaning enquiry answered in seconds, not on Monday.
+            {/*
+              Two sentences, deliberately set on two lines: the benefit and the
+              boundary get a beat each rather than running together. The
+              sub-head immediately below is load-bearing, not decoration - read
+              cold, "never quote a price" is two negatives in a row and needs
+              resolving inside a second. Nothing goes between them.
+            */}
+            {/*
+              Sized so each sentence holds one line at every breakpoint. The
+              two-line shape is the point; a sentence wrapping mid-phrase on a
+              narrow screen turns a clean pair of beats into four ragged lines.
+            */}
+            <h1 className="font-display mt-5 text-[2rem] leading-[1.08] font-semibold tracking-[-0.015em] text-ink sm:text-[3.25rem] lg:text-[3.5rem]">
+              {/*
+                The space between the spans is deliberate. Both are block, so
+                it collapses visually, but without it the accessible name
+                concatenates to "...enquiry.Never quote..." and a screen reader
+                runs the two sentences together.
+              */}
+              <span className="block">Never miss an enquiry.</span>{" "}
+              <span className="block">Never quote a price.</span>
             </h1>
 
-            <p className="text-slate-body mt-6 max-w-xl text-lg leading-relaxed text-pretty">
-              The assistant replies to enquiries from your website, asks the
-              questions a price actually depends on, and passes your team a
-              structured lead they can quote from.
+            <p className="text-slate-body mt-6 max-w-lg text-lg leading-relaxed text-pretty">
+              {HERO_SUBHEAD}
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -40,10 +62,7 @@ export function Hero() {
               </Link>
             </div>
 
-            <p className="text-slate-body mt-6 text-sm">
-              No sales call to see it. Watch a real enquiry get qualified in
-              under a minute.
-            </p>
+            <p className="text-slate-body mt-6 text-sm">{HERO_REASSURANCE}</p>
           </div>
 
           <div className="lg:pl-4">

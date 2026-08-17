@@ -21,7 +21,7 @@ export function PreviewSection() {
             Try it with your own enquiry
           </Link>
           <p className="text-slate-body text-sm">
-            Example conversation. Your assistant asks the questions you tell it
+            Example conversation. Linwick asks the questions you tell it
             to ask.
           </p>
         </div>

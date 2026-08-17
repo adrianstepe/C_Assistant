@@ -39,7 +39,7 @@ export function AudienceSection() {
         <SectionHeading
           eyebrow="Who it’s for"
           title="Built for commercial cleaning, not adapted from something generic."
-          lead="The questions, the vocabulary and the lead format assume a cleaning business. That makes it sharper here, and a poor fit elsewhere."
+          lead="The questions, the vocabulary and the handover format assume a cleaning business. That makes it sharper here, and a poor fit elsewhere."
         />
 
         <div className="mt-12 grid gap-5 md:grid-cols-2">

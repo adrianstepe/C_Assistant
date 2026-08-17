@@ -94,7 +94,7 @@ function nextSlot(lead: LeadDraft): SlotId | null {
   return SLOT_ORDER.find((slot) => !lead.slots[slot]) ?? null;
 }
 
-/** Builds "Got it — commercial office in Manchester." from what just landed. */
+/** Builds "Got it, commercial office in Manchester." from what just landed. */
 function acknowledge(filled: readonly SlotId[], lead: LeadDraft): string {
   const parts = filled
     .map((slot) => {
