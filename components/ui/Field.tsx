@@ -1,8 +1,14 @@
 import type { ReactNode } from "react";
 
-/** Shared styling for native inputs, selects and textareas. */
+/**
+ * Shared styling for native inputs, selects and textareas.
+ *
+ * `text-base` below `sm` is deliberate: iOS Safari zooms the page in whenever a
+ * focused input's font size is under 16px, and never zooms back out. The
+ * contact card at the end of the demo is four such inputs on a phone.
+ */
 export const controlClass =
-  "border-border bg-background text-foreground w-full rounded-md border px-2.5 py-1.5 text-sm outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-50";
+  "border-border bg-background text-foreground w-full rounded-md border px-2.5 py-1.5 text-base outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-50 sm:text-sm";
 
 interface FieldProps {
   label: string;

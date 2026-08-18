@@ -94,6 +94,17 @@ function nextSlot(lead: LeadDraft): SlotId | null {
   return SLOT_ORDER.find((slot) => !lead.slots[slot]) ?? null;
 }
 
+/** Drops repeats, case-insensitively, keeping the first of each. */
+function dedupe(): (part: string) => boolean {
+  const seen = new Set<string>();
+  return (part) => {
+    const key = part.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  };
+}
+
 /** Builds "Got it, commercial office in Manchester." from what just landed. */
 function acknowledge(filled: readonly SlotId[], lead: LeadDraft): string {
   const parts = filled
@@ -103,6 +114,10 @@ function acknowledge(filled: readonly SlotId[], lead: LeadDraft): string {
       return value && isEchoable(value) ? SLOT_SPECS[slot].ack(value) : null;
     })
     .filter((part): part is string => part !== null)
+    // One reply can legitimately fill two slots with the same words -
+    // "evenings" is read as both a frequency and a preferred time - and
+    // acknowledging each of them produced "Got it, evenings, evenings."
+    .filter(dedupe())
     .slice(0, 2);
 
   if (parts.length === 0) return "Thanks.";
@@ -137,9 +152,28 @@ function applyMessage(
     }
   }
 
-  // Targeted: whatever we actually asked about must end up answered.
+  // Targeted: whatever we actually asked about must end up answered, so the
+  // conversation can never stall on a reply we did not understand.
   if (asked && !slots[asked]) {
-    slots[asked] = parseSlot(asked, message);
+    const parsed = parseSlot(asked, message);
+
+    // ...but not by filing the answer to a *different* question under this
+    // one. Asked for a town and told "5000 sq ft", the size parser claimed it
+    // and the location fallback echoed the same text, so the card read
+    // "Location: 5000 sq ft" and the town was never asked for again.
+    //
+    // `code === undefined` is exactly the bare-echo fallback: every parser that
+    // recognises something sets a code, `size` returns "unknown" rather than
+    // record nonsense as a floor area, and `propertyType` returns "other" while
+    // keeping the customer's own words - which is what we want for premises
+    // there is no pattern for.
+    const echoedWithoutUnderstanding = parsed.code === undefined;
+    const answeredADifferentQuestion = filled.length > 0;
+
+    slots[asked] =
+      echoedWithoutUnderstanding && answeredADifferentQuestion
+        ? { display: "To be confirmed", code: "unknown" }
+        : parsed;
     filled.push(asked);
   }
 

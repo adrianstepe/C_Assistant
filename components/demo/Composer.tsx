@@ -5,6 +5,14 @@ import type { FormEvent, RefObject } from "react";
 
 const MAX_LENGTH = 300;
 
+/**
+ * `text-base` below `sm` is deliberate, not a style choice: iOS Safari zooms the
+ * page in whenever a focused input's font size is under 16px, and never zooms
+ * back out. Most of this demo's traffic is a phone.
+ */
+const messageBoxClass =
+  "border-hairline text-ink min-h-11 w-full rounded-lg border bg-white px-3.5 py-2.5 text-base outline-none placeholder:text-slate-body/70 focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ink/12 disabled:opacity-60 sm:text-[0.9375rem]";
+
 interface ComposerProps {
   disabled: boolean;
   suggestions: readonly string[];
@@ -80,7 +88,7 @@ export function Composer({
           disabled={disabled}
           onChange={(event) => setValue(event.target.value)}
           placeholder="Type your reply…"
-          className="border-hairline text-ink min-h-11 w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-body/70 focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ink/12 disabled:opacity-60 sm:text-[0.9375rem]"
+          className={messageBoxClass}
         />
         <button
           type="submit"

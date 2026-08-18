@@ -38,7 +38,11 @@ function sentenceCase(raw: string): string {
  * assistant look like it understood something it plainly did not.
  */
 export function isEchoable(value: { display: string; code?: string }): boolean {
-  if (value.code !== undefined && value.code !== "other" && value.code !== "unknown") {
+  // "unknown" is the placeholder for a value we never learned, so there is
+  // nothing to repeat back. Without this the assistant answers "not sure" with
+  // "Got it, to be confirmed." - reading its own placeholder aloud.
+  if (value.code === "unknown") return false;
+  if (value.code !== undefined && value.code !== "other") {
     return true;
   }
   return /^\p{L}[\p{L}\p{N}\s'’\-,.()&]{0,44}$/u.test(value.display);
@@ -50,6 +54,37 @@ const UNSURE = /\b(not sure|dunno|don'?t know|do not know|no idea|unsure|tbc)\b/
 /** Answers that mean "nothing to add". */
 const NOTHING =
   /^(no|none|nope|nothing|n\/?a|not really|nothing special|just the usual|standard)\b/i;
+
+/**
+ * Hostility aimed at the assistant, rather than a description of the premises.
+ *
+ * Needed because `parseSlot` records whatever the customer typed and
+ * `isEchoable` only checks that a value is *shaped* like words. A short insult
+ * is shaped like words, so abuse was both repeated back in the cleaning
+ * company's own voice and written onto the lead card as a business detail.
+ *
+ * Deliberately requires the abuse to be pointed at us. A bare insult word can
+ * be a genuine part of a cleaning brief, so `INSULT` alone is not enough:
+ * "there is dog shit in the stairwell" describes the job, "your bot is shit"
+ * does not. `ABUSE_PHRASES` covers the forms that need no second person to be
+ * unambiguous. Waste vocabulary a cleaner would really use - rubbish, waste,
+ * mess, crap - is kept out of `INSULT` on purpose.
+ */
+const ABUSE_PHRASES =
+  /\b(f+u+c+k+\s*(you|off|u)|piss\s*off|screw\s*(you|u)|shut\s*up|sod\s*off|bugger\s*off|get\s*(lost|stuffed))\b/i;
+
+const INSULT =
+  /\b(useless|stupid|idiot|idiotic|moron|moronic|dumb|pathetic|worthless|braindead|dickhead|prick|wanker|bastard|twat|arsehole|asshole|bollocks|shite|shit)\b/i;
+
+// "youre" and "ur" are listed separately because \b(you)\b does not match
+// inside an apostrophe-less contraction, and "youre a moron" is a thing
+// people actually type.
+const AIMED_AT_US = /\b(you|youre|your|yours|ur|bot|robot|chatbot|assistant)\b/i;
+
+function isAbusive(raw: string): boolean {
+  if (ABUSE_PHRASES.test(raw)) return true;
+  return INSULT.test(raw) && AIMED_AT_US.test(raw);
+}
 
 // --- property type -----------------------------------------------------------
 
@@ -272,6 +307,12 @@ export function extractAll(raw: string): Partial<Record<SlotId, SlotValue>> {
  */
 export function parseSlot(slot: SlotId, raw: string): SlotValue {
   const text = raw.trim();
+
+  // Checked before anything else: abuse must never reach the lead card as a
+  // business detail, and the "unknown" code keeps it out of the spoken
+  // acknowledgement too. The slot is still filled, so the conversation
+  // advances exactly as it did before.
+  if (isAbusive(text)) return { display: "To be confirmed", code: "unknown" };
 
   if (UNSURE.test(text)) {
     switch (slot) {
