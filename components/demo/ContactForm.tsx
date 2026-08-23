@@ -72,7 +72,7 @@ export function ContactForm({ disabled, onSubmit }: ContactFormProps) {
               className={`${controlClass} min-h-11`}
             />
             {errors.name ? (
-              <p id="contact-name-error" className="text-xs font-medium text-rose-700">
+              <p id="contact-name-error" role="alert" className="text-xs font-medium text-rose-700">
                 {errors.name}
               </p>
             ) : null}
@@ -104,7 +104,7 @@ export function ContactForm({ disabled, onSubmit }: ContactFormProps) {
               className={`${controlClass} min-h-11`}
             />
             {errors.email ? (
-              <p id="contact-email-error" className="text-xs font-medium text-rose-700">
+              <p id="contact-email-error" role="alert" className="text-xs font-medium text-rose-700">
                 {errors.email}
               </p>
             ) : null}
@@ -124,7 +124,7 @@ export function ContactForm({ disabled, onSubmit }: ContactFormProps) {
               className={`${controlClass} min-h-11`}
             />
             {errors.phone ? (
-              <p id="contact-phone-error" className="text-xs font-medium text-rose-700">
+              <p id="contact-phone-error" role="alert" className="text-xs font-medium text-rose-700">
                 {errors.phone}
               </p>
             ) : null}

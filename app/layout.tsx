@@ -22,9 +22,11 @@ import "./globals.css";
 const display = localFont({
   variable: "--font-display",
   display: "swap",
+  // Weight 600 is the only display weight any component uses (`font-semibold`
+  // on every heading and the wordmark). A 700 face was shipped until it was
+  // found preloaded and unreferenced - roughly 23 KB of every cold load.
   src: [
     { path: "./fonts/barlow-semi-condensed-600.woff2", weight: "600", style: "normal" },
-    { path: "./fonts/barlow-semi-condensed-700.woff2", weight: "700", style: "normal" },
   ],
 });
 

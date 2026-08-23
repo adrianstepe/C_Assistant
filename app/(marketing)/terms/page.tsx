@@ -12,6 +12,9 @@ import { Container } from "@/components/marketing/primitives";
 export const metadata: Metadata = {
   title: "Terms",
   description: `Terms of service for the ${PRODUCT_NAME} from ${BRAND.name}.`,
+  // Metadata merges shallowly: without this the root layout's homepage
+  // canonical wins and the page declares itself to be the homepage.
+  alternates: { canonical: "/terms" },
 };
 
 /**

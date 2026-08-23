@@ -4,11 +4,32 @@ import { Container } from "@/components/marketing/primitives";
 import { BRAND } from "@/lib/marketing/brand";
 import { isAssistantModelEnabled } from "@/lib/ai/deepseek";
 
+const description = `Send a cleaning enquiry the way one of your customers would, and read what ${BRAND.name} hands over. No signup, no sales call.`;
+
 export const metadata: Metadata = {
   // Not "Try {BRAND.name}": the root title template already appends the brand,
   // so naming it here renders "Try Linwick | Linwick".
   title: "Try the demo",
-  description: `Send a cleaning enquiry the way one of your customers would, and read what ${BRAND.name} hands over. No signup, no sales call.`,
+  description,
+  // Metadata merges shallowly, so without this the root layout's homepage
+  // canonical wins and this page tells search engines it is the homepage.
+  alternates: { canonical: "/demo" },
+  // The demo link is the one people pass around, so it needs its own preview
+  // rather than the homepage's. Stating the whole object is required, not
+  // optional: a nested key here replaces the root's entire openGraph block.
+  openGraph: {
+    url: "/demo",
+    type: "website",
+    siteName: BRAND.name,
+    locale: "en_GB",
+    title: `Try the ${BRAND.name} demo`,
+    description,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Try the ${BRAND.name} demo`,
+    description,
+  },
 };
 
 // Whether the model is configured is a server-side fact, so this page cannot

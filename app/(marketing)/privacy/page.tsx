@@ -8,6 +8,9 @@ import { Container } from "@/components/marketing/primitives";
 export const metadata: Metadata = {
   title: "Privacy notice",
   description: `How ${BRAND.legalEntity} handles personal data collected through this website and ${BRAND.name}.`,
+  // Metadata merges shallowly: without this the root layout's homepage
+  // canonical wins and the page declares itself to be the homepage.
+  alternates: { canonical: "/privacy" },
 };
 
 // The notice states which processors are actually in use, which depends on

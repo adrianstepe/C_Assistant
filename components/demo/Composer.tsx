@@ -66,7 +66,7 @@ export function Composer({
               type="button"
               disabled={disabled}
               onClick={() => submit(suggestion)}
-              className="border-hairline text-slate-body active:scale-95 rounded-full border bg-white px-3 py-1.5 text-xs font-medium transition-colors hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
+              className="border-hairline text-slate-body active:scale-95 inline-flex min-h-11 items-center rounded-full border bg-white px-4 py-2 text-sm font-medium transition-colors hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-50"
             >
               {suggestion}
             </button>

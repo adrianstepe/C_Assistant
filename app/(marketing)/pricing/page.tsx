@@ -9,6 +9,9 @@ import { Container, secondaryButton } from "@/components/marketing/primitives";
 export const metadata: Metadata = {
   title: "Pricing",
   description: `${PRODUCT_NAME} for UK commercial cleaning companies. ${SETUP_FEE_LABEL} setup, then ${MONTHLY_FEE_LABEL} a month. Monthly rolling, cancel any time.`,
+  // Metadata merges shallowly: without this the root layout's homepage
+  // canonical wins and the page declares itself to be the homepage.
+  alternates: { canonical: "/pricing" },
 };
 
 // Availability depends on server environment variables, so this must not be
