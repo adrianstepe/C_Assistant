@@ -49,7 +49,7 @@ const data = localFont({
   ],
 });
 
-const description = `${BRAND.name} answers new enquiries on your website instantly and asks what your estimator needs. It never gives a price. ${SETUP_FEE_LABEL} setup, ${MONTHLY_FEE_LABEL} a month.`;
+const description = `${BRAND.name} answers new enquiries on your website instantly and asks what your estimator needs. It never gives a price for the job. ${SETUP_FEE_LABEL} setup, ${MONTHLY_FEE_LABEL} a month.`;
 
 const { siteUrl } = publicEnv;
 

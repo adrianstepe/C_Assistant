@@ -31,12 +31,17 @@ export const HERO_REASSURANCE =
  * appears twice: on the landing page straight after the worked example, and
  * again on /pricing where the objection is sharpest. Kept verbatim in both
  * places. Do not paraphrase it per-page.
+ *
+ * Two different prices exist in this business and the wording must never let
+ * them blur: the price of the customer's job, which the assistant never
+ * states, and Linwick's own fee, which /pricing states plainly. On /pricing
+ * this section sits directly above that fee card, so the claim anchors itself
+ * to "the job" and the closing line names the only prices Linwick does give.
  */
 export const BOUNDARY = {
   eyebrow: "What it does not do",
   /** Set at heading scale. The claim itself. */
-  claim: `${BRAND_NAME} never gives a price.`,
+  claim: `${BRAND_NAME} never gives a price for the job.`,
   /** Set at body scale, directly beneath. The proof of the claim. */
-  detail:
-    "It holds no rates, no rules of thumb and no opinion about what a job is worth. It asks, it records, it hands over. What the work is worth stays with your estimator, where it belongs.",
+  detail: `It holds no rates, no rules of thumb and no opinion about what a job is worth. It asks, it records, it hands over. What the work is worth stays with your estimator, where it belongs. The only prices ${BRAND_NAME} ever gives are its own.`,
 } as const;
