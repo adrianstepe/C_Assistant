@@ -71,7 +71,7 @@ export function AssistantPreview() {
             type="button"
             onClick={() => setPlaying((value) => !value)}
             aria-pressed={!playing}
-            className="border-hairline text-slate-body inline-flex min-h-8 shrink-0 items-center rounded-md border bg-white px-3 text-xs font-medium transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            className="border-hairline text-slate-body inline-flex min-h-9 shrink-0 items-center rounded-md border bg-white px-3 text-xs font-medium transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           >
             {playing ? "Pause" : "Play"}
             <span className="sr-only"> the example conversation</span>

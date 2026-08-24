@@ -78,15 +78,32 @@ sellable (or document precisely).
 - [x] Isolated worktree created off main d3065cd; goal registered.
 - [x] Read: stripe webhook/checkout/config, setup route, leads route, db store/
       schema, tenants config, order-events, admin pages, brand/primitives/globals.
-- [x] Local env up (npm ci, isolated Postgres, .env.local).
-- [ ] Build + serve on :3210; run baseline visual QA (before screenshots).
-- [ ] Part A audit page by page (home, demo, pricing, security, privacy, terms,
-      checkout success/cancelled, /c/[slug], /admin/*) at desk/tablet/mobile.
-- [ ] Part A fixes within existing system, after screenshots each.
-- [ ] Part B walk: dev-preview checkout → onboarding form → row created disabled
-      → manual enable (documented SQL) → capture page conversation → enquiry
-      stored → visible in /admin/leads. Fix what's broken en route.
-- [ ] Final report.
+- [x] Local env up (npm ci, isolated Postgres on :54339, .env.local).
+- [x] Baseline visual QA: 27 page-viewport combos screenshotted to
+      `visual-qa/*-{desk,tab,mob}.png` + metrics in `visual-qa/before.txt`
+      (354 floor flags, mostly generous-padding artifacts of the fill metric).
+- [x] Deep DOM audit (`scripts/ui-audit.mjs`): no horizontal overflow anywhere,
+      contrast clean once inherited-colour false positives excluded; real
+      findings below.
+- [x] **Model limitation recorded:** this environment has no image-capable
+      model (read_image fails on stealth/ox-alpha), so the audit's judgment is
+      grounded in DOM measurement + source reading; PNG pairs are produced as
+      evidence for human review.
+- [x] Part A fixes implemented:
+      1. LeadCard hero mock: h3 → p (h1→h3 outline break).
+      2. AssistantPreview pause control min-h-8 → min-h-9 (consistency with
+         the demo's own secondary controls).
+      3. Capture pages no longer swallow failed enquiry POSTs: visible
+         sending/sent(+ref)/failed states with a retry button
+         (QuoteAssistantDemo capture outcome state).
+      4. LeadSummaryCard audience switch: enquirer sees "Your enquiry", not
+         seller copy ("Qualified enquiry / Ready to quote" / structured-data
+         block stay demo-only).
+      5. README de-staled: persistence/webhook claims matched to shipped code;
+         new "Activating a tenant" section documenting the one manual step.
+- [ ] Rebuild + after screenshots + audit re-run.
+- [ ] Part B walk against test tenant.
+
 
 ## Decisions / flags for Adrians (running list)
 
