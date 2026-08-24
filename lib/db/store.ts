@@ -166,15 +166,17 @@ export async function insertEnquiry(
     payload: Record<string, unknown>;
     contactEmail: string;
   },
-): Promise<{ inserted: boolean }> {
+): Promise<{ inserted: boolean; id: string | null }> {
   const rows = await sql`
     insert into leads (kind, tenant_slug, event_id, status, summary, payload, contact_email)
     values ('enquiry', ${enquiry.tenantSlug}, ${enquiry.eventId}, 'captured',
             ${enquiry.summary}, ${jsonb(sql, enquiry.payload)}::jsonb, ${enquiry.contactEmail})
     on conflict (event_id) do nothing
-    returning event_id
+    returning id
   `;
-  return { inserted: rows.length > 0 };
+  const row = rows[0];
+  if (!row) return { inserted: false, id: null };
+  return { inserted: true, id: String(row.id) };
 }
 
 /**
@@ -332,4 +334,219 @@ function summariseForStore(event: OrderEvent): string {
     case "subscription.cancelled":
       return "Subscription cancelled";
   }
+}
+
+// ---------------------------------------------------------------------------
+// lead email delivery (phase 3)
+//
+// The enquiry lifecycle lives entirely in `leads.status`, advanced by
+// monotonic UPDATE ... WHERE status IN (...) guards. No extra tables: a
+// status can only move forwards, and every transition names the states it is
+// legal from, so a retried webhook or a racing sweep cannot double-send,
+// resurrect a delivered row, or downgrade one.
+
+/** A lead row with everything the sender and the escalation need. */
+export interface DeliverableLead {
+  id: string;
+  kind: string;
+  eventId: string;
+  tenantSlug: string | null;
+  tenantCompanyName: string | null;
+  /** Where the enquiry goes; null only for rows with no tenant row left. */
+  recipientEmail: string | null;
+  contactEmail: string | null;
+  summary: string | null;
+  payload: unknown;
+  retryCount: number;
+}
+
+/**
+ * Claims a stored enquiry for sending.
+ *
+ * Returns false when the row is not in the claimable state - already claimed
+ * by a concurrent attempt, already sent, already failed terminally, or not
+ * an enquiry at all. A `false` is a normal outcome, not an error.
+ */
+export async function claimLeadForSending(
+  sql: postgres.Sql,
+  id: string,
+): Promise<boolean> {
+  const rows = await sql`
+    update leads set status = 'pending'
+    where id = ${id} and kind = 'enquiry' and status = 'captured'
+    returning id
+  `;
+  return rows.length > 0;
+}
+
+/**
+ * Records that the provider accepted a message for this lead.
+ *
+ * The row stays `pending` on purpose: acceptance is not delivery. Only the
+ * provider's own webhook promotes the row to `sent`.
+ */
+export async function recordSendAccepted(
+  sql: postgres.Sql,
+  id: string,
+  providerMessageId: string,
+): Promise<void> {
+  await sql`
+    update leads
+    set provider_message_id = ${providerMessageId}, last_error = null
+    where id = ${id} and status = 'pending'
+  `;
+}
+
+/**
+ * Records a failed send attempt and decides what happens next.
+ *
+ * Transient failures consume one retry slot and set `next_retry_at` from the
+ * caller's schedule; once the budget is exhausted the row becomes
+ * `undeliverable`. Permanent failures skip straight to undeliverable - no
+ * schedule survives a rejected address. Both outcomes are monotonic: neither
+ * branch can touch a row that has moved on from `pending`.
+ */
+export async function recordSendFailure(
+  sql: postgres.Sql,
+  id: string,
+  error: string,
+  options: { transient: boolean; nextRetryAt: Date; maxRetries: number },
+): Promise<"retry" | "undeliverable"> {
+  if (!options.transient) {
+    await sql`
+      update leads
+      set status = 'undeliverable', last_error = ${error}
+      where id = ${id} and status = 'pending'
+    `;
+    return "undeliverable";
+  }
+
+  const rows = await sql`
+    update leads
+    set retry_count = retry_count + 1,
+        next_retry_at = ${options.nextRetryAt},
+        last_error = ${error},
+        status = case when leads.retry_count + 1 >= ${options.maxRetries}
+                      then 'undeliverable' else 'pending' end
+    where id = ${id} and status = 'pending'
+    returning status
+  `;
+  const status = rows[0]?.status;
+  return status === "undeliverable" ? "undeliverable" : "retry";
+}
+
+/** The provider's delivery confirmation. Monotonic: never un-sends. */
+export async function markLeadDelivered(
+  sql: postgres.Sql,
+  providerMessageId: string,
+): Promise<boolean> {
+  const rows = await sql`
+    update leads
+    set status = 'sent', delivered_at = now(), last_error = null
+    where provider_message_id = ${providerMessageId}
+      and status in ('captured', 'pending')
+    returning id
+  `;
+  return rows.length > 0;
+}
+
+/** The provider's hard-failure notice. Monotonic in the same way. */
+export async function markLeadUndeliverable(
+  sql: postgres.Sql,
+  providerMessageId: string,
+  reason: string,
+): Promise<boolean> {
+  const rows = await sql`
+    update leads
+    set status = 'undeliverable', last_error = ${reason}, next_retry_at = null
+    where provider_message_id = ${providerMessageId}
+      and status in ('captured', 'pending')
+    returning id
+  `;
+  return rows.length > 0;
+}
+
+/**
+ * Nudges a delayed message back into the sweep's view without burning a
+ * retry: a delivery delay reported by the provider usually resolves itself.
+ */
+export async function nudgeDelayedLead(
+  sql: postgres.Sql,
+  providerMessageId: string,
+  nextRetryAt: Date,
+): Promise<void> {
+  await sql`
+    update leads
+    set next_retry_at = coalesce(next_retry_at, ${nextRetryAt})
+    where provider_message_id = ${providerMessageId} and status = 'pending'
+  `;
+}
+
+/** Leads whose scheduled retry has come due, oldest first. */
+export async function listDueLeads(
+  sql: postgres.Sql,
+  now: Date,
+  limit = 20,
+): Promise<DeliverableLead[]> {
+  const rows = await sql`
+    select l.id, l.kind, l.event_id, l.tenant_slug, c.company_name,
+           c.lead_recipient_email, l.contact_email, l.summary, l.payload,
+           l.retry_count
+    from leads l
+    left join customers c on c.slug = l.tenant_slug
+    where l.kind = 'enquiry' and l.status = 'pending'
+      and l.next_retry_at is not null and l.next_retry_at <= ${now}
+    order by l.next_retry_at asc
+    limit ${limit}
+  `;
+  return rows.map(mapDeliverableRow);
+}
+
+/** One lead by id, whatever its state; escalation reads the full payload. */
+export async function getDeliverableLead(
+  sql: postgres.Sql,
+  id: string,
+): Promise<DeliverableLead | null> {
+  const rows = await sql`
+    select l.id, l.kind, l.event_id, l.tenant_slug, c.company_name,
+           c.lead_recipient_email, l.contact_email, l.summary, l.payload,
+           l.retry_count
+    from leads l
+    left join customers c on c.slug = l.tenant_slug
+    where l.id = ${id} and l.kind = 'enquiry'
+    limit 1
+  `;
+  return rows[0] ? mapDeliverableRow(rows[0]) : null;
+}
+
+/** The lead a provider webhook event refers to, via the stored provider id. */
+export async function getLeadByProviderMessageId(
+  sql: postgres.Sql,
+  providerMessageId: string,
+): Promise<DeliverableLead | null> {
+  const rows = await sql`
+    select l.id, l.kind, l.event_id, l.tenant_slug, c.company_name,
+           c.lead_recipient_email, l.contact_email, l.summary, l.payload,
+           l.retry_count
+    from leads l
+    left join customers c on c.slug = l.tenant_slug
+    where l.provider_message_id = ${providerMessageId} and l.kind = 'enquiry'
+    limit 1
+  `;
+  return rows[0] ? mapDeliverableRow(rows[0]) : null;
+}
+
+function mapDeliverableRow(row: Record<string, unknown>): DeliverableLead {
+  return {
+    id: String(row.id),
+    kind: String(row.kind),
+    eventId: String(row.event_id),
+    tenantSlug: (row.tenant_slug as string | null) ?? null,
+    tenantCompanyName: (row.company_name as string | null) ?? null,
+    recipientEmail: (row.lead_recipient_email as string | null) ?? null,
+    contactEmail: (row.contact_email as string | null) ?? null,
+    summary: (row.summary as string | null) ?? null,
+    payload: row.payload,
+    retryCount: Number(row.retry_count ?? 0),
+  };
 }

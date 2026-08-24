@@ -8,6 +8,8 @@ import { effectiveDailyCap, loadTenantConfig } from "@/lib/tenants/config";
 import { readLeadsDatabaseConfig } from "@/lib/db/config";
 import { getLeadsDatabase } from "@/lib/db/client";
 import { ensureSchema, insertEnquiry } from "@/lib/db/store";
+import { readEmailDeliveryConfig } from "@/lib/email/config";
+import { dispatchNewLead } from "@/lib/email/dispatch";
 import { clientKey } from "@/lib/rate-limit";
 import { checkSharedRateLimit } from "@/lib/rate-limit/shared";
 
@@ -225,7 +227,27 @@ export async function POST(request: Request): Promise<NextResponse> {
     if (!result.inserted) {
       // Already stored: a retried POST. The original 201 stands.
       console.info(`[leads] duplicate enquiry ${eventId} for ${slug}; acknowledged`);
+      return NextResponse.json(
+        { received: true, reference: leadPayload(lead).reference },
+        { status: 201 },
+      );
     }
+
+    // Fast path for delivery. Only when the pipeline is switched on; with it
+    // off, the row stays `captured` and nothing leaves the server (the
+    // dispatch seam's flag check is what guarantees that, not this branch).
+    const emailConfig = readEmailDeliveryConfig();
+    if (emailConfig && result.id) {
+      try {
+        const outcome = await dispatchNewLead({ sql, http: emailConfig }, result.id);
+        console.info(`[leads] enquiry ${eventId} dispatch outcome: ${outcome.kind}`);
+      } catch (dispatchError) {
+        // Delivery trouble must not turn a stored enquiry into a 500 - the
+        // sweep route picks up anything left pending.
+        console.error(`[leads] dispatch of ${eventId} threw; leaving to sweep`, dispatchError);
+      }
+    }
+
     return NextResponse.json(
       { received: true, reference: leadPayload(lead).reference },
       { status: 201 },

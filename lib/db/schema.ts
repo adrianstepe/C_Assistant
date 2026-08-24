@@ -58,7 +58,8 @@ create table if not exists leads (
   delivered_at timestamptz,
   retry_count integer not null default 0,
   next_retry_at timestamptz,
-  last_error text
+  last_error text,
+  provider_message_id text
 );
 
 -- The admin panel reads recent activity; enquiries are read per tenant.
@@ -76,4 +77,9 @@ create table if not exists rate_windows (
   count integer not null default 0,
   primary key (bucket_key, window_started_at)
 );
+
+-- Databases created before phase 3 lack the provider id column; ALTER ... IF
+-- NOT EXISTS keeps the whole script safe to re-run against any vintage.
+alter table leads add column if not exists provider_message_id text;
+create index if not exists leads_provider_message_id_idx on leads (provider_message_id);
 `;
