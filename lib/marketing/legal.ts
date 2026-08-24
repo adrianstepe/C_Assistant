@@ -6,16 +6,18 @@
  * to-be-confirmed marker rather than inventing a name, exactly like the
  * registration-address banner behaves when company details were missing.
  *
- * REVIEW BEFORE LAUNCH: fill the two labels in when the accounts exist, and
- * re-read every page that renders them. They must match what is actually
- * switched on, which those pages double-check against live configuration.
+ * Both labels were filled on the stealth-ox/legal-pack-v1 branch once the
+ * vendors were confirmed: Neon for the database (Adrians' ADR-1 pick,
+ * provisioned EU region), Resend for transactional lead email (ADR-2).
+ * They must match what is actually switched on — every page that renders
+ * them still double-checks against live configuration before naming either.
  */
 
-/** e.g. "Neon" or "Supabase". Empty until Adrians provisions the database. */
-export const DATABASE_VENDOR_LABEL = "";
+/** The Postgres provider backing LEADS_DATABASE_URL (EU-region project). */
+export const DATABASE_VENDOR_LABEL = "Neon";
 
-/** e.g. "Resend". Empty until the sending account exists. */
-export const EMAIL_DELIVERY_VENDOR_LABEL = "";
+/** The transactional email provider behind EMAIL_SENDING_ENABLED. */
+export const EMAIL_DELIVERY_VENDOR_LABEL = "Resend";
 
 /**
  * Retention, stated in the privacy notice and enforced by code

@@ -204,7 +204,12 @@ export default function TermsPage() {
             >
               {BRAND.contactEmail}
             </a>
-            , and signing it is part of setup rather than an afterthought.
+            , and signing it is part of setup rather than an afterthought. The
+            agreement names our sub-processors, commits us to telling you in
+            advance before one changes (you may object), sets a 24-hour
+            notification commitment if a personal data breach ever affects your
+            enquiries, and states the safeguards covering any transfer outside
+            the EEA.
           </p>
           <p>
             How we handle personal data, including where it is stored and how
