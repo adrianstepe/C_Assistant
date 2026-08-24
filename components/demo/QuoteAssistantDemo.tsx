@@ -423,7 +423,15 @@ export function QuoteAssistantDemo({
             </div>
           ) : state.inputMode === "contact" ? (
             <>
-              <ContactForm disabled={isBusy} onSubmit={submitContact} />
+              <ContactForm
+                disabled={isBusy}
+                onSubmit={submitContact}
+                footnote={
+                  capture
+                    ? `Your enquiry goes only to ${company}, together with the answers above.`
+                    : undefined
+                }
+              />
               {capture ? (
                 // Honeypot field, one layer of the capture page's abuse
                 // control alongside the submit-interval check and the rate

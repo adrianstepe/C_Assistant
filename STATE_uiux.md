@@ -101,13 +101,64 @@ sellable (or document precisely).
          block stay demo-only).
       5. README de-staled: persistence/webhook claims matched to shipped code;
          new "Activating a tenant" section documenting the one manual step.
-- [ ] Rebuild + after screenshots + audit re-run.
-- [ ] Part B walk against test tenant.
+- [x] Rebuild + after screenshots + audit re-run (`visual-qa/after/` vs root;
+      `audit-after.txt`: contrast FP and heading jump gone, 11px micro-labels
+      deliberately kept — consistent five-component system pattern).
+- [x] Extra Part A find while scripting the journey: ContactForm's footer told
+      capture-page visitors "Nothing is sent or stored anywhere" — a lie on a
+      paying tenant's page. Now `footnote` prop: capture pages say the enquiry
+      goes to the business.
+- [x] Part B walk (`scripts/journey-check.mjs`, rerunnable): **21/21 PASS** —
+      home → pricing → buy → success → onboarding form → `customers` row stored
+      with enabled=false + setup_request audit row → manual activation SQL →
+      /c/[slug] full chip-driven conversation (6 turns) → "Sent to …" pill with
+      ENQ reference → enquiry stored exactly once → visible at /admin/leads →
+      disabled slug 404s identically → webhook without creds answers 503.
+      Evidence screenshots: visual-qa/01…05*.png. Note: checkout dev-preview
+      path only exists under `next dev`; production build correctly refuses
+      checkout without Stripe keys (verified: "Email us to get started").
+- [x] Repo verification suites against this rig: **phase1 24/24** (webhook
+      signature discipline, event dedup, outage→500 so Stripe retries,
+      unconfigured→503, log-only mode, admin basic auth) and **phase3 41/41**
+      (full email lifecycle vs stub Resend incl. retries, escalations, bounce
+      handling, flag-off-beats-credentials).
+
 
 
 ## Decisions / flags for Adrians (running list)
 
 - Admin area auth: Basic auth via proxy.ts, fails closed. OK for one operator.
-- Manual enable step is documented product intent — but zero tooling around it
-  (no admin action, no Stripe↔tenant link recorded). Candidate for a minimal
-  safe improvement this run; anything touching money flow gets flagged instead.
+- Manual enable step is documented product intent (README now documents the
+  exact SQL). No admin UI for it — deliberate; flagged as fine while one
+  person operates this, revisit if anyone else ever activates tenants.
+- **No notification exists when a paying customer submits setup.** Adrians
+  learns about a new customer only by checking /admin/leads or Vercel logs.
+  The success page promises "We'll confirm your link by email" — that email is
+  Adrians, manually, today. Candidate: a single flag-gated notification email
+  to CONTACT_EMAIL on setup submission (same seam as lead delivery). Not built
+  here without a business call on wording/expectations.
+- Kept as-is after consideration: 11px uppercase micro-labels (consistent
+  system pattern), legal-page narrow measure (reading measure beats filling
+  width), footer/nav text links under 44px but above the 24px AA floor
+  (documented convention), centered sparse CTA sections (deliberate rhythm).
+- Production checkout with unset Stripe keys shows an honest disabled state —
+  verified, not assumed.
+- Business decisions left entirely to Adrians: VAT wording, refund policy,
+  DeepSeek/GDPR switch, pricing display, contact-domain question.
+
+## How to re-run any of this
+
+```powershell
+# rig (once): npm ci; local postgres via scripts/dev-postgres.ps1 (any port);
+# .env.local with LEADS_DATABASE_URL + ADMIN_USERNAME/PASSWORD
+npm run build; npm run start -- -p 3210        # prod server for visual QA
+$env:QA_ADMIN_USER='…'; $env:QA_ADMIN_PASS='…'
+node visual-qa.mjs                              # screenshots + metrics
+node scripts/ui-audit.mjs                       # overflow/contrast/structure
+node scripts/journey-check.mjs --base http://localhost:3211 --admin "u:p"
+                                                # dev server needed for the
+                                                # no-Stripe dev-preview path
+node scripts/verify-phase1.mjs --db-url …       # webhook/store contract
+node scripts/verify-phase3.mjs --db-url …       # email pipeline vs stub
+```
+
