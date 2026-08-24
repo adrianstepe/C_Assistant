@@ -12,7 +12,8 @@ import { createDemoEngine } from "@/lib/ai/demo-engine";
 import { isConfidentMatch, parseSlot } from "@/lib/ai/extract";
 import { complete, readDeepSeekConfig } from "@/lib/ai/deepseek";
 import type { ChatTurn } from "@/lib/ai/deepseek";
-import { checkRateLimit, clientKey } from "@/lib/rate-limit";
+import { checkSharedRateLimit } from "@/lib/rate-limit/shared";
+import { clientKey } from "@/lib/rate-limit";
 
 /**
  * Conversation endpoint for the quote assistant.
@@ -230,10 +231,14 @@ function nextAsk(lead: LeadDraft): SlotId | "contact_details" | "nothing" {
 // --- handler -----------------------------------------------------------------
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const minute = checkRateLimit(clientKey(request.headers, "assistant-min"), PER_MINUTE);
+  // Phase 2 moved the counters to the shared datastore (same keys, same
+  // windows, one interface), so limits hold across server instances. Without
+  // a datastore configured this degrades to the in-memory limiter exactly as
+  // before.
+  const minute = await checkSharedRateLimit(clientKey(request.headers, "assistant-min"), PER_MINUTE);
   if (!minute.allowed) return tooMany(minute.retryAfterSeconds);
 
-  const hour = checkRateLimit(clientKey(request.headers, "assistant-hr"), PER_HOUR);
+  const hour = await checkSharedRateLimit(clientKey(request.headers, "assistant-hr"), PER_HOUR);
   if (!hour.allowed) return tooMany(hour.retryAfterSeconds);
 
   let body: unknown;
@@ -286,7 +291,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     askAbout !== "nothing" &&
     !isConfidentMatch(askAbout, message)
   ) {
-    const globalBudget = checkRateLimit("assistant-global", GLOBAL_PER_DAY);
+    const globalBudget = await checkSharedRateLimit("assistant-global", GLOBAL_PER_DAY);
     if (globalBudget.allowed) {
       const result = await complete(
         config,

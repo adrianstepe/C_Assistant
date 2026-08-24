@@ -64,4 +64,16 @@ create table if not exists leads (
 -- The admin panel reads recent activity; enquiries are read per tenant.
 create index if not exists leads_received_at_idx on leads (received_at desc);
 create index if not exists leads_tenant_received_idx on leads (tenant_slug, received_at desc);
+
+-- Shared rate-limit windows (phase 2): fixed-window counters in the database
+-- instead of one server instance's memory, so per-IP limits, the global daily
+-- budget and each tenant's daily cap are real ceilings rather than
+-- multiplied-by-warm-instances suggestions. One row per bucket per window;
+-- rows older than a couple of days are swept opportunistically.
+create table if not exists rate_windows (
+  bucket_key text not null,
+  window_started_at timestamptz not null,
+  count integer not null default 0,
+  primary key (bucket_key, window_started_at)
+);
 `;

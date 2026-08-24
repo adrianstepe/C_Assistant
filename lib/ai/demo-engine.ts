@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   AssistantProvider,
   AssistantReply,
   ContactDetails,
@@ -17,7 +17,8 @@ import {
 } from "./extract";
 
 /**
- * Deterministic quote assistant used by the public demo.
+ * Deterministic quote assistant used by the public demo and, since phase 2 of
+ * the fulfilment plan, by per-tenant hosted capture pages.
  *
  * It implements `AssistantProvider`, so replacing it with a real LLM is a
  * matter of writing another implementation and changing one line in
@@ -30,9 +31,15 @@ import {
  *   customer's reply, however odd that reply is.
  * - Never ask more than one thing at a time, except for contact details, which
  *   arrive together on a small form.
+ *
+ * PHASE 2 SCOPE NOTE. Hosted tenant pages pass a `companyName` so the greeting
+ * names the right cleaning company. That is the entire extent of this file's
+ * configuration surface, deliberately: the slot order, the wording templates,
+ * the never-quote-a-price boundary and the state machine are shared with the
+ * public demo and do not vary per tenant.
  */
 
-/** The fictional cleaning company the assistant is answering on behalf of. */
+/** The fictional cleaning company the public demo answers on behalf of. */
 export const DEMO_COMPANY = "Meridian Cleaning";
 
 interface SlotSpec {
@@ -220,12 +227,18 @@ function completionReply(lead: LeadDraft): AssistantReply {
 export interface DemoEngineOptions {
   /** Set to 0 in tests to remove the simulated round trip. */
   latency?: boolean;
+  /**
+   * Who the assistant is answering on behalf of. Defaults to the fictional
+   * public-demo company; hosted tenant pages pass their own name.
+   */
+  companyName?: string;
 }
 
 export function createDemoEngine(
   options: DemoEngineOptions = {},
 ): AssistantProvider {
   const useLatency = options.latency ?? true;
+  const company = options.companyName ?? DEMO_COMPANY;
 
   return {
     id: "demo-local",
@@ -233,7 +246,7 @@ export function createDemoEngine(
     greeting(): AssistantReply {
       return {
         messages: [
-          `Hi, thanks for getting in touch with ${DEMO_COMPANY}. Tell me what you need cleaned and I'll put together everything the team needs to price it.`,
+          `Hi, thanks for getting in touch with ${company}. Tell me what you need cleaned and I'll put together everything the team needs to price it.`,
         ],
         suggestions: [
           "I need office cleaning in Manchester",

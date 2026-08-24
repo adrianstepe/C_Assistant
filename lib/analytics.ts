@@ -18,7 +18,9 @@ export type AnalyticsEvent =
   | { name: "checkout_cancelled"; properties: Record<string, never> }
   | { name: "onboarding_submitted"; properties: { hasWebsite: boolean } }
   | { name: "demo_restarted"; properties: Record<string, never> }
-  | { name: "lead_viewed"; properties: { leadId: string } };
+  | { name: "lead_viewed"; properties: { leadId: string } }
+  | { name: "lead_captured"; properties: { stored: boolean } }
+  | { name: "lead_capture_failed"; properties: Record<string, never> };
 
 export type AnalyticsEventName = AnalyticsEvent["name"];
 

@@ -123,6 +123,7 @@ export const FOOTER_LINKS: readonly NavLink[] = [
   { href: "/#how-it-works", label: "How it works" },
   { href: "/demo", label: "Demo" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/security", label: "Security" },
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms" },
 ];

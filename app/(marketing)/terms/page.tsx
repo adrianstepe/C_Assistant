@@ -190,28 +190,36 @@ export default function TermsPage() {
 
         <Section heading="Data protection">
           <p>
-            Enquiries {PRODUCT_NAME} collects on your website are your data. You
-            are the controller and we act as your processor. Article 28 of the
-            GDPR requires a written data processing agreement between us before
-            that processing begins. Ask for ours at{" "}
+            Enquiries {PRODUCT_NAME} collects on your hosted enquiry page are
+            your data. You are the controller and we act as your processor.
+            Article 28 of the GDPR requires a written data processing agreement
+            between us before that processing begins. Our standard one-page
+            agreement is available on request at{" "}
             <a
               href={`mailto:${BRAND.contactEmail}`}
               className="rounded-md font-medium text-ink underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
               {BRAND.contactEmail}
             </a>
-            .
+            , and signing it is part of setup rather than an afterthought.
           </p>
           <p>
-            How we handle personal data, including processing outside the EEA,
-            is set out in our{" "}
+            How we handle personal data, including where it is stored and how
+            long we keep it, is set out in our{" "}
             <Link
               href="/privacy"
               className="rounded-md font-medium text-ink underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
               privacy notice
             </Link>
-            . Read section 5 before going live.
+            , and the security measures we apply are described on our{" "}
+            <Link
+              href="/security"
+              className="rounded-md font-medium text-ink underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            >
+              security page
+            </Link>
+            . Read both before going live.
           </p>
         </Section>
 
