@@ -27,7 +27,7 @@ export function SiteFooter() {
             <Wordmark />
             <p className="text-slate-body mt-4 text-sm leading-relaxed">
               {BRAND.name} answers new enquiries on your website and asks the
-              questions a price depends on. It never gives a price.
+              questions a price depends on. It never gives a price for the job.
             </p>
           </div>
 
