@@ -175,7 +175,10 @@ try {
     await page.fill("#contact-email", email);
     await page.getByRole("button", { name: "Send details" }).click();
 
-    await page.waitForSelector("text=Qualified enquiry", { timeout: 30_000 });
+    // Hosted capture pages address the enquirer ("Your enquiry"); the
+    // seller-facing "Qualified enquiry" heading is demo-only since the
+    // uiux-and-fulfilment-check rework of LeadSummaryCard.
+    await page.waitForSelector("text=Your enquiry", { timeout: 30_000 });
     check(true, `[${vp.tag}] completed all eight answers to the lead card`);
     await page.screenshot({
       path: join(".verify-tmp", `tenant-complete-${vp.tag}.png`),
