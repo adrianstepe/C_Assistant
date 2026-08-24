@@ -26,6 +26,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# verification harness output (scripts/verify-*.mjs)
+/.verify-tmp/
+
 # secrets — env files are ignored, the example template is not
 .env
 .env.*
