@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import type { SlotId, SlotValue, LeadDraft } from "@/lib/ai/types";
 import { SLOT_ORDER } from "@/lib/ai/types";
 import { leadPayload } from "@/lib/ai/lead-view";
@@ -9,7 +9,7 @@ import { readLeadsDatabaseConfig } from "@/lib/db/config";
 import { getLeadsDatabase } from "@/lib/db/client";
 import { ensureSchema, insertEnquiry } from "@/lib/db/store";
 import { readEmailDeliveryConfig } from "@/lib/email/config";
-import { dispatchNewLead } from "@/lib/email/dispatch";
+import { dispatchNewLead, sweepDueLeads } from "@/lib/email/dispatch";
 import { clientKey } from "@/lib/rate-limit";
 import { checkSharedRateLimit } from "@/lib/rate-limit/shared";
 
@@ -243,9 +243,28 @@ export async function POST(request: Request): Promise<NextResponse> {
         console.info(`[leads] enquiry ${eventId} dispatch outcome: ${outcome.kind}`);
       } catch (dispatchError) {
         // Delivery trouble must not turn a stored enquiry into a 500 - the
-        // sweep route picks up anything left pending.
+        // sweep picks up anything left pending (below, and daily via cron).
         console.error(`[leads] dispatch of ${eventId} threw; leaving to sweep`, dispatchError);
       }
+
+      // Retry driver for the Hobby plan: Vercel only permits once-daily cron
+      // expressions, so instead of paying Pro for frequent sweeps, every real
+      // enquiry sweeps whatever retries have fallen due after this response
+      // is sent. Leads arriving at any realistic cadence re-check overdue
+      // deliveries far more often than daily; the daily cron is the backstop
+      // for quiet days. Failures here are logged, never surfaced.
+      const sweepSql = sql;
+      const sweepHttp = emailConfig;
+      after(async () => {
+        try {
+          const swept = await sweepDueLeads({ sql: sweepSql, http: sweepHttp });
+          if (swept.attempted > 0) {
+            console.info(`[leads] post-response sweep: ${JSON.stringify(swept)}`);
+          }
+        } catch (sweepError) {
+          console.error("[leads] post-response sweep failed", sweepError);
+        }
+      });
     }
 
     return NextResponse.json(

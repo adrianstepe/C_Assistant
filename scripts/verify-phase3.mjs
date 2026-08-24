@@ -252,13 +252,16 @@ try {
   check(retryRow?.next_retry_at !== null && retryRow?.next_retry_at !== undefined, "retry scheduled");
   checkEqual(countEscalations(), 0, "no escalation yet");
 
-  // Three delays configured -> three attempts total -> third failure ends it.
+  // Three delays configured -> three attempts total -> the third failure
+  // ends it. The route also sweeps due retries after each response now (the
+  // Hobby-plan cron fix), so WHICH driver lands each attempt is timing
+  // dependent; what must hold regardless is the budget: exactly three send
+  // calls for this tenant's address, and exactly one escalation.
   const sweep = async () =>
     fetch(`${baseA}/api/email-dispatch`, {
       method: "POST",
       headers: { authorization: "Bearer dispatch-secret" },
     });
-  const providerCallsBefore = stubRequests.length;
   await new Promise((r) => setTimeout(r, 120));
   await sweep();
   await new Promise((r) => setTimeout(r, 120));
@@ -269,11 +272,13 @@ try {
   checkEqual(undeliverableRow?.status ?? "", "undeliverable", "row becomes UNDELIVERABLE once retries are exhausted");
   check(String(undeliverableRow?.last_error ?? "").includes("500"), "last error recorded");
   checkEqual(countEscalations(), 1, "exactly one escalation email went to CONTACT_EMAIL");
-  checkEqual(
-    stubRequests.length - providerCallsBefore,
-    3,
-    "three provider calls across initial attempt and sweeps",
-  );
+
+  // Let any trailing post-response sweep settle before counting.
+  await new Promise((r) => setTimeout(r, 400));
+  const sendCallsForTenant = stubRequests.filter(
+    (entry) => entry.body?.to?.[0] === "inbox@verify-mail.example",
+  ).length;
+  checkEqual(sendCallsForTenant, 3, "retry budget capped at exactly three provider calls in total");
   stubMode = "ok";
 
   console.log("\n[A4] permanent failures never retry");

@@ -11,6 +11,12 @@ import { sweepDueLeads } from "@/lib/email/dispatch";
  * transiently and whose retry delay has passed (5m / 15m / 40m by default,
  * env-overridable), escalating the ones whose budget is exhausted.
  *
+ * On Vercel's Hobby plan this cron can only run once per day, so the frequent
+ * driver is `/api/leads` instead: every stored enquiry triggers an
+ * opportunistic sweep of due retries via `after()`. At any realistic enquiry
+ * cadence that re-checks overdue deliveries far more often than daily; this
+ * route stays as the backstop for quiet days and manual runs.
+ *
  * The fast path in `/api/leads` already sends on capture when enabled; this
  * route exists for everything that path could not finish: provider blips,
  * network partitions, a crashed instance mid-send. Every state change is

@@ -7,7 +7,7 @@
     },
     {
       "path": "/api/email-dispatch",
-      "schedule": "*/5 * * * *"
+      "schedule": "23 4 * * *"
     }
   ]
 }
