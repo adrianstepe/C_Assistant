@@ -31,10 +31,18 @@ export const dynamic = "force-dynamic";
  * vendor names come from the same constants file (`lib/marketing/legal.ts`)
  * precisely so the two pages cannot contradict each other.
  *
- * REVIEW BEFORE LAUNCH — same list as the privacy notice header: fill in the
- * vendor labels once provisioned; re-read this page against reality before
- * real traffic (the plan's phase-4 item "a proper security review against
- * reality" covers a deeper pass).
+ * Every technical statement on this page points at something that exists in
+ * this codebase: the shared rate-limit counters (`lib/rate-limit/shared.ts`
+ * over the `rate_windows` table), the intake guards in
+ * `app/api/leads/route.ts` (honeypot field, minimum completion time, body
+ * cap), de-duplication on unique event ids (`lib/db/schema.ts`), the
+ * scheduled retention sweep (`lib/retention.ts` behind `/api/retention`,
+ * cron-configured in `vercel.json`), and fail-closed authentication on every
+ * privileged route. If a measure is removed from the code it must come off
+ * this page at the same time.
+ *
+ * The breach-commitment figure below mirrors the processor agreement's
+ * notification clause; if one changes, both change together.
  */
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
@@ -100,8 +108,9 @@ export default function SecurityPage() {
         <Fact label="Where data is stored">
           <p>
             Setup details and completed enquiries live in one database created
-            in an EU region, so that data does not leave the EEA during its
-            lifecycle. The provider is <VendorName label={DATABASE_VENDOR_LABEL} />.
+            in an EU region, so that enquiry data is stored and primarily
+            processed there. The provider is <VendorName label={DATABASE_VENDOR_LABEL} />,
+            reached only over a TLS-encrypted connection.
           </p>
           {!databaseLive ? (
             <p className="bg-mist border-hairline rounded-lg border px-4 py-3 text-sm">
@@ -110,6 +119,28 @@ export default function SecurityPage() {
               when it is.
             </p>
           ) : null}
+        </Fact>
+
+        <Fact label="Abuse and bot control">
+          <p>
+            The public enquiry endpoint assumes it will be attacked, because
+            any public form is. Submissions pass through several gates before
+            anything is stored: per-IP limits of 10 requests a minute and 60 an
+            hour counted in shared storage so they hold across all of our
+            servers, a global daily budget across everyone, a separate daily
+            cap per customer&rsquo;s page, and a hard 16&nbsp;KB ceiling on the size of
+            any submission.
+          </p>
+          <p>
+            Two quiet bot checks run alongside: a hidden field that people
+            never see or fill in, and a minimum completion time &mdash; a
+            &ldquo;conversation&rdquo; finished faster than a person can read the first
+            question is dropped without a row being written. Unknown or
+            switched-off pages answer exactly like each other, so there is no
+            way to probe for what exists. These controls raise the cost of
+            abuse substantially; no honest operator claims they make abuse
+            impossible.
+          </p>
         </Fact>
 
         <Fact label="How access is controlled">
@@ -121,9 +152,13 @@ export default function SecurityPage() {
             locked rather than falling open.
           </p>
           <p>
-            There are deliberately no customer accounts. A cleaning company
-            never logs in, so there are no customer passwords to leak; their
-            enquiries go straight to the mailbox they nominate.
+            The same fail-closed rule applies to every privileged route: the
+            scheduled deletion job and the email-dispatch sweep answer
+            &ldquo;service unavailable&rdquo; until they have been given a secret, and the
+            delivery-status webhook accepts nothing unless its signature
+            verifies. There are deliberately no customer accounts. A cleaning
+            company never logs in, so there are no customer passwords to leak;
+            their enquiries go straight to the mailbox they nominate.
           </p>
         </Fact>
 
@@ -133,7 +168,16 @@ export default function SecurityPage() {
             reliably to the cleaning company concerned, and are deleted{" "}
             {RETENTION_DAYS_AFTER_DELIVERY} days after delivery, with a hard
             ceiling of {RETENTION_HARD_CEILING_DAYS} days from receipt whatever
-            their status. Deletion runs as scheduled code, not as intention.
+            their status. Deletion runs as scheduled code every day, not as
+            intention.
+          </p>
+          <p>
+            Every stored item carries a unique event id, so a retried or
+            repeated submission lands on the original record instead of storing
+            &mdash; and later sending &mdash; an enquiry twice. A lead moves through a
+            fixed sequence of states (captured, pending, sent or undeliverable)
+            that can only move forwards, which is what stops a delayed retry
+            from double-sending anything.
           </p>
           {leadEmailLive ? (
             <p>
@@ -175,7 +219,9 @@ export default function SecurityPage() {
             delivered is marked as such and escalates to a person, and payment
             failures alert us directly. If a personal data breach ever affects
             your data, we tell you without undue delay, as GDPR Article 33(2)
-            requires of a processor.
+            requires of a processor &mdash; our working commitment, written into
+            our processor agreement, is to tell an affected customer within 24
+            hours of becoming aware of a breach affecting their data.
           </p>
         </Fact>
       </div>

@@ -38,14 +38,15 @@ export const dynamic = "force-dynamic";
  *
  * Settled: the registered address and registration number are filled in
  * (`lib/marketing/brand.ts`); retention periods for stored enquiries are
- * stated in section 6 and enforced by `/api/retention`.
+ * stated in section 6 and enforced by `/api/retention`; the database and
+ * lead-email vendors are named (`lib/marketing/legal.ts`: Neon, Resend) and
+ * each still renders only when actually configured.
  *
  * REVIEW BEFORE LAUNCH — factual details only the operator can supply:
  *  - Whether a Data Protection Officer is required (Art. 37). Assumed not.
- *  - The database vendor's name once provisioned
- *    (`DATABASE_VENDOR_LABEL` in `lib/marketing/legal.ts`).
- *  - The lead email vendor's name once that account exists
- *    (`EMAIL_DELIVERY_VENDOR_LABEL`).
+ *  - That the Neon project really was created in an EU region (Frankfurt or
+ *    London) — section 5 asserts it; confirm in the dashboard before live
+ *    traffic.
  *  - The transfer safeguard for DeepSeek (Art. 46). See the transfers section:
  *    this is the single biggest open compliance item and is flagged in-page
  *    while unresolved. The model is switched off by default until it is
@@ -286,23 +287,43 @@ export default function PrivacyPage() {
         <Section id="transfers" heading="5. Transfers outside the EEA">
           <p>
             We are established in {BRAND.jurisdiction}, in the EU. Some of our
-            providers process data outside the European Economic Area: Vercel
-            in the United States, and, where the optional AI model behind{" "}
-            {BRAND.name} is enabled, DeepSeek in China.
+            providers process data outside the European Economic Area:
           </p>
+          <ul className="list-disc space-y-2 pl-5">
+            <li>
+              <strong className="font-medium text-ink">Vercel</strong> (hosting):
+              its primary processing facilities are in the United States, and
+              its edge network serves this site worldwide.
+            </li>
+            <li>
+              <strong className="font-medium text-ink">Resend</strong>{" "}
+              (enquiry email delivery): email content and delivery records are
+              stored in the United States, whatever region the message is sent
+              from.
+            </li>
+            <li>
+              <strong className="font-medium text-ink">DeepSeek</strong>, where
+              the optional AI model behind {BRAND.name} is enabled (see below):
+              China.
+            </li>
+          </ul>
           <p>
             The database holding customer setup details and completed enquiries
-            is created in an EU region on purpose, so that data does not leave
-            the EEA at any point of its lifecycle. Enquiry emails are sent from
-            within the EEA to our customer&rsquo;s nominated mailbox; where that
-            mailbox itself sits outside the EEA, that is our customer&rsquo;s
-            arrangement as controller.
+            is created in an EU region on purpose, so that enquiry data is
+            stored and primarily processed inside the EEA. Where an enquiry
+            email then lands in a mailbox outside the EEA &mdash; for instance a
+            customer whose own inbox is hosted in the US &mdash; that onward step
+            is our customer&rsquo;s arrangement as controller.
           </p>
           <p>
-            Transfers to countries without an adequacy decision require
-            appropriate safeguards under Chapter V of the GDPR, such as Standard
-            Contractual Clauses together with an assessment of the destination
-            country.
+            Where personal data leaves the UK or the EEA, the transfer relies
+            on the safeguards in each provider&rsquo;s published data processing
+            agreement: EU Standard Contractual Clauses, adapted for transfers
+            subject to UK law by the UK Addendum or the UK IDTA, together with
+            certification under the EU&ndash;US Data Privacy Framework
+            (including its UK extension) where the provider holds one &mdash;
+            Vercel and Resend both state that they do. A copy of the relevant
+            agreement is available on request at <Mail />.
           </p>
           <p className="border-hairline bg-mist rounded-lg border px-4 py-3 text-sm">
             <strong className="font-semibold text-ink">
@@ -354,10 +375,15 @@ export default function PrivacyPage() {
             Art. 28 requires a written data processing agreement between us
             before that processing starts. Our standard one-page agreement,
             which states what we process, the retention schedule in section 6,
-            the sub-processors listed in section 4, and how we help with data
-            subject requests, is available on request at <Mail />. If you are
-            buying, ask before you go live rather than after. You will be told
-            in advance before new sub-processors are added, and may object.
+            the sub-processors listed in section 4, how we help with data
+            subject requests, and the transfer safeguards in section 5, is
+            available on request at <Mail />. If you are buying, ask before you
+            go live rather than after. You will be told in advance before new
+            sub-processors are added, and may object. If a personal data breach
+            ever affects enquiries we hold for you, we tell you without undue
+            delay &mdash; the agreement commits us to telling you within 24
+            hours of becoming aware &mdash; together with what happened and what
+            we have done, so you can meet your own notification duties.
           </p>
           <p>
             The security measures we apply while holding that data &mdash;
