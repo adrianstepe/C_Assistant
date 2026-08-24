@@ -5,11 +5,14 @@ to UK commercial cleaning companies.
 
 **Status.** Built: the public marketing site (`/`), the interactive quote
 assistant demo (`/demo`), the Stripe checkout path (`/pricing` →
-`/checkout/success`) and the internal prospect tracker (`/admin/leads`).
+`/checkout/success`), hosted per-tenant capture pages (`/c/[slug]`) with
+durable enquiry intake, the internal prospect tracker (`/admin/leads`), the
+Stripe webhook with durable order-event storage, and flag-gated email delivery
+of enquiries via Resend.
 
 Not built: any real LLM behind the assistant (the demo runs on a deterministic
-local engine, see `lib/ai/`), and any persistence — the onboarding form after
-checkout does not save to a server.
+local engine unless `ASSISTANT_MODEL_ENABLED` is switched on, see `lib/ai/`
+and `CLAUDE.md`).
 
 ## Intended workflow
 
@@ -197,17 +200,20 @@ code above reads. Aim to match the SDK's pinned **2026-07-29.dahlia**:
   `api_version` on the destination itself (`POST /v1/webhook_endpoints`) rather
   than trying to move the account.
 
-**`record` currently only logs.** Orders are still not persisted anywhere, so
-the log line is the record. It is the single seam: when orders need a database,
-or a failed payment needs to reach a human inbox, that function changes and
-nothing upstream of it does. A real implementation must also de-duplicate on
-`eventId` (Stripe retries, and can deliver twice anyway) and must not assume
-events arrive in the order they occurred.
+**Order events are persisted.** With `LEADS_DATABASE_URL` set, every confirmed
+event is also written to the `leads` table (`kind = 'order_event'`) with
+de-duplication on `eventId` — Stripe retries, and can deliver twice anyway.
+Without a datastore the log line remains the record. `record` is still the
+single seam: nothing upstream of it knows whether a database exists. A real
+ordering requirement (deriving subscription state) must read current state
+from Stripe rather than replaying events.
 
-**The onboarding form does not save anywhere.** It validates, then hands the
-customer their answers with a prefilled email and a copy button, and says so
-plainly. Replacing that with a real submission is a contained change to
-`handleSubmit` in `components/checkout/OnboardingForm.tsx`.
+**The onboarding form persists as an inactive tenant row.** It POSTs to
+`/api/setup`, which stores the answers in the `customers` table with
+`enabled = false` plus an audit row (`kind = 'setup_request'`) in `leads`.
+Going live stays a deliberate human act — see "Activating a tenant" below.
+A retried submission de-duplicates on its event id and can never mint a second
+tenant row.
 
 Two things to decide before taking real money:
 
@@ -219,6 +225,32 @@ Two things to decide before taking real money:
   tax claim a customer relies on at the point of sale.
 - **Refunds.** `/terms` states there is no fixed policy yet and invites contact.
   Honest, but it is not a policy, and it should become one.
+
+### Activating a tenant (the one deliberate manual step)
+
+Payment and the onboarding form never make a tenant live by themselves. What
+exists after a customer pays and submits the form:
+
+- a `customers` row with `enabled = false`, holding company name, contact,
+  recipient email, services/areas/notes;
+- a `setup_request` row in `leads` visible at `/admin/leads`;
+- `order_event` rows from the webhook proving what was paid.
+
+Going live is then one statement, run by whoever operates the database:
+
+```sql
+update customers set enabled = true, updated_at = now() where slug = '<slug>';
+```
+
+The capture page (`/c/<slug>`) and its enquiry intake come online immediately;
+an unknown or still-disabled slug is indistinguishable from a 404, on purpose.
+There is no admin UI for this flip: `/admin/leads` is read-only by design
+(the kill switch should not be one misclick next to a table of rows). If
+activation ever needs to get faster than one SQL statement, the change belongs
+in a small authenticated admin action — not in the public setup endpoint.
+
+Suspending a tenant is the same column set back to `false`; nothing is
+deleted.
 
 ## Internal: prospect tracker (`/admin/leads`)
 

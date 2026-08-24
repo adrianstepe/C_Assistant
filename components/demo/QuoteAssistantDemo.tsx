@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useReducer, useRef } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import type { ContactDetails, LeadDraft } from "@/lib/ai/types";
 import { computeProgress } from "@/lib/ai/types";
 import { getAssistantProvider } from "@/lib/ai/provider";
@@ -23,6 +23,18 @@ import { TypingDots } from "@/components/ui/TypingDots";
 interface LastRequest {
   text: string;
   contact?: ContactDetails;
+}
+
+/**
+ * Delivery state of the capture-page submission, from the enquirer's point of
+ * view. Before this existed, a failed POST was logged in the console while the
+ * visitor read a finished conversation: the business lost the lead and nobody
+ * on either side knew.
+ */
+interface CaptureOutcome {
+  status: "idle" | "sending" | "sent" | "failed";
+  /** The enquiry reference echoed back by `/api/leads` on success. */
+  reference?: string;
 }
 
 export interface CaptureTarget {
@@ -88,6 +100,10 @@ export function QuoteAssistantDemo({
   const captureSubmitted = useRef(false);
   const captureEventId = useRef<string>("");
   const honeypotRef = useRef<HTMLInputElement>(null);
+  // Visible to the enquirer on hosted pages: sending / sent / failed.
+  const [captureOutcome, setCaptureOutcome] = useState<CaptureOutcome>({
+    status: "idle",
+  });
 
   const progress = computeProgress(state.lead);
   const isBusy = state.status === "thinking";
@@ -116,6 +132,7 @@ export function QuoteAssistantDemo({
     if (!captureEventId.current) {
       captureEventId.current = `enq_${crypto.randomUUID()}`;
     }
+    setCaptureOutcome({ status: "sending" });
     try {
       const response = await fetch("/api/leads", {
         method: "POST",
@@ -134,9 +151,20 @@ export function QuoteAssistantDemo({
         }),
       });
       if (!response.ok) throw new Error(`capture POST returned ${response.status}`);
-      track({ name: "lead_captured", properties: { stored: response.ok } });
+      // The stored enquiry's reference, so the enquirer has something to
+      // quote if they contact the business about their enquiry.
+      let reference: string | undefined;
+      try {
+        const body = (await response.json()) as { reference?: string };
+        reference = typeof body.reference === "string" ? body.reference : undefined;
+      } catch {
+        // A 201 with an unreadable body is still a stored enquiry.
+      }
+      setCaptureOutcome({ status: "sent", reference });
+      track({ name: "lead_captured", properties: { stored: true } });
     } catch (error) {
       console.warn("[capture] enquiry could not be delivered", error);
+      setCaptureOutcome({ status: "failed" });
       track({ name: "lead_capture_failed", properties: {} });
     }
   }
@@ -227,6 +255,7 @@ export function QuoteAssistantDemo({
     startedAt.current = Date.now();
     captureSubmitted.current = false;
     captureEventId.current = "";
+    setCaptureOutcome({ status: "idle" });
     track({ name: "demo_restarted", properties: {} });
     dispatch({ type: "reset", reply: provider.greeting() });
     inputRef.current?.focus();
@@ -341,9 +370,49 @@ export function QuoteAssistantDemo({
 
           {isComplete ? (
             <div className="border-hairline flex flex-wrap items-center justify-between gap-3 border-t bg-white px-4 py-3">
-              <p className="text-slate-body text-xs">
-                Conversation finished. The enquiry is ready to price.
-              </p>
+              {capture ? (
+                // Hosted capture page: the enquirer needs to know whether the
+                // enquiry actually reached the business, not just that the
+                // conversation finished.
+                captureOutcome.status === "sent" ? (
+                  <p className="bg-clear-tint text-clear inline-flex flex-wrap items-center gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium">
+                    <span className="inline-block size-1.5 rounded-full bg-current" aria-hidden="true" />
+                    Sent to {company}.
+                    {captureOutcome.reference ? (
+                      <span className="font-mono tabular-nums opacity-80">
+                        Ref {captureOutcome.reference}
+                      </span>
+                    ) : null}
+                  </p>
+                ) : captureOutcome.status === "failed" ? (
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <p className="text-fault text-xs font-medium">
+                      Couldn&rsquo;t reach the server — your enquiry has
+                      <strong className="font-semibold"> not</strong> been sent
+                      yet.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void submitCapture(state.lead, state.messages.length)
+                      }
+                      className="border-fault text-fault hover:bg-fault-tint inline-flex min-h-9 items-center rounded-md border bg-white px-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+                    >
+                      Send it now
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-slate-body text-xs">
+                    {captureOutcome.status === "sending"
+                      ? "Sending your enquiry…"
+                      : "Conversation finished."}
+                  </p>
+                )
+              ) : (
+                <p className="text-slate-body text-xs">
+                  Conversation finished. The enquiry is ready to price.
+                </p>
+              )}
               <button
                 type="button"
                 onClick={restart}
@@ -354,7 +423,15 @@ export function QuoteAssistantDemo({
             </div>
           ) : state.inputMode === "contact" ? (
             <>
-              <ContactForm disabled={isBusy} onSubmit={submitContact} />
+              <ContactForm
+                disabled={isBusy}
+                onSubmit={submitContact}
+                footnote={
+                  capture
+                    ? `Your enquiry goes only to ${company}, together with the answers above.`
+                    : undefined
+                }
+              />
               {capture ? (
                 // Honeypot field, one layer of the capture page's abuse
                 // control alongside the submit-interval check and the rate
@@ -395,7 +472,10 @@ export function QuoteAssistantDemo({
           }
         >
           {isComplete ? (
-            <LeadSummaryCard lead={state.lead} />
+            <LeadSummaryCard
+              lead={state.lead}
+              audience={capture ? "enquirer" : "business"}
+            />
           ) : (
             <CollectedPanel lead={state.lead} />
           )}

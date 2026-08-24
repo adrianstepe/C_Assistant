@@ -10,6 +10,13 @@ import { TypingDots } from "@/components/ui/TypingDots";
 interface ContactFormProps {
   disabled: boolean;
   onSubmit: (contact: ContactDetails) => void;
+  /**
+   * The footer line, which must be true wherever the form renders. The public
+   * demo stores nothing and says so; on a hosted capture page the submission
+   * is the whole point, so the same sentence would be a lie on the page of a
+   * paying customer.
+   */
+  footnote?: string;
 }
 
 type FieldErrors = Partial<Record<"name" | "email" | "phone", string>>;
@@ -21,7 +28,11 @@ type FieldErrors = Partial<Record<"name" | "email" | "phone", string>>;
  * has to be right: an email typed into a chat box cannot be validated without
  * guessing, and guessing a customer's email is worse than asking properly.
  */
-export function ContactForm({ disabled, onSubmit }: ContactFormProps) {
+export function ContactForm({
+  disabled,
+  onSubmit,
+  footnote = "This is a demonstration. Nothing is sent or stored anywhere.",
+}: ContactFormProps) {
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
@@ -132,9 +143,7 @@ export function ContactForm({ disabled, onSubmit }: ContactFormProps) {
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-slate-body text-xs">
-            This is a demonstration. Nothing is sent or stored anywhere.
-          </p>
+          <p className="text-slate-body text-xs">{footnote}</p>
           <button
             type="submit"
             disabled={disabled}

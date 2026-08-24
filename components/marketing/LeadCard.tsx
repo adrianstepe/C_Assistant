@@ -26,9 +26,12 @@ export function LeadCard() {
 
         <header className="border-hairline flex items-start justify-between gap-3 border-b px-5 py-4">
           <div>
-            <h3 className="font-display text-base font-semibold text-ink">
+            {/* A paragraph, not a heading: this card sits in the hero before
+                any h2 on the page, so an h3 here read as a broken heading
+                outline. Visually identical; the document outline stays clean. */}
+            <p className="font-display text-base font-semibold text-ink">
               New enquiry, ready to price
-            </h3>
+            </p>
             <p className="text-slate-body mt-0.5 font-mono text-xs">
               {HERO_LEAD.reference} · {HERO_LEAD.receivedAt}
             </p>
