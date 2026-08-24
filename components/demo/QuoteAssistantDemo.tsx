@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useReducer, useRef } from "react";
-import type { ContactDetails } from "@/lib/ai/types";
+import type { ContactDetails, LeadDraft } from "@/lib/ai/types";
 import { computeProgress } from "@/lib/ai/types";
 import { getAssistantProvider } from "@/lib/ai/provider";
 import { DEMO_COMPANY } from "@/lib/ai/demo-engine";
@@ -25,11 +25,47 @@ interface LastRequest {
   contact?: ContactDetails;
 }
 
-export function QuoteAssistantDemo({ useModel = false }: { useModel?: boolean }) {
+export interface CaptureTarget {
+  /** The tenant slug every completed enquiry is attributed to. */
+  slug: string;
+}
+
+interface QuoteAssistantDemoProps {
+  useModel?: boolean;
+  /**
+   * Who the assistant answers on behalf of. Defaults to the fictional public
+   * demo company; hosted capture pages pass the tenant's own name.
+   */
+  companyName?: string;
+  /**
+   * Set on hosted capture pages: once a conversation completes, the finished
+   * lead is posted to `/api/leads` against this slug. The public demo leaves
+   * it unset and stays exactly what its footnote says it is.
+   */
+  capture?: CaptureTarget;
+  /**
+   * The public demo closes with Linwick's own sales pitch. A capture page
+   * belongs to a cleaning company and is read by their prospective customers,
+   * so there is nothing to sell them here.
+   */
+  showSalesOutro?: boolean;
+}
+
+export function QuoteAssistantDemo({
+  useModel = false,
+  companyName,
+  capture,
+  showSalesOutro = true,
+}: QuoteAssistantDemoProps) {
+  const company = companyName ?? DEMO_COMPANY;
+
   // One provider for the life of the component. Swapping engines happens in
   // `getAssistantProvider`, not here. `useModel` is resolved on the server so
   // no credential or its absence is inferable from the client bundle.
-  const provider = useMemo(() => getAssistantProvider({ useModel }), [useModel]);
+  const provider = useMemo(
+    () => getAssistantProvider({ useModel, companyName }),
+    [useModel, companyName],
+  );
 
   // Greeting is synchronous, so the first render is already a conversation —
   // no effect, no empty state, nothing to hydrate around.
@@ -46,6 +82,12 @@ export function QuoteAssistantDemo({ useModel = false }: { useModel?: boolean })
   const transcriptRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const leadRef = useRef<HTMLDivElement>(null);
+  // Capture-mode bookkeeping: one submission per completed conversation, a
+  // stable event id across retries of that submission, and the honeypot
+  // field real users never see or fill.
+  const captureSubmitted = useRef(false);
+  const captureEventId = useRef<string>("");
+  const honeypotRef = useRef<HTMLInputElement>(null);
 
   const progress = computeProgress(state.lead);
   const isBusy = state.status === "thinking";
@@ -69,6 +111,36 @@ export function QuoteAssistantDemo({ useModel = false }: { useModel?: boolean })
     }
   }, [state.status, state.inputMode]);
 
+  async function submitCapture(lead: LeadDraft, messageCount: number) {
+    if (!capture) return;
+    if (!captureEventId.current) {
+      captureEventId.current = `enq_${crypto.randomUUID()}`;
+    }
+    try {
+      const response = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          slug: capture.slug,
+          eventId: captureEventId.current,
+          lead,
+          meta: {
+            startedAtMs: startedAt.current,
+            elapsedMs: Date.now() - startedAt.current,
+            messageCount,
+          },
+          // Honeypot: a real person cannot see or fill this field.
+          companyWebsite: honeypotRef.current?.value ?? "",
+        }),
+      });
+      if (!response.ok) throw new Error(`capture POST returned ${response.status}`);
+      track({ name: "lead_captured", properties: { stored: response.ok } });
+    } catch (error) {
+      console.warn("[capture] enquiry could not be delivered", error);
+      track({ name: "lead_capture_failed", properties: {} });
+    }
+  }
+
   useEffect(() => {
     if (!isComplete) return;
     track({
@@ -80,10 +152,19 @@ export function QuoteAssistantDemo({ useModel = false }: { useModel?: boolean })
       },
     });
     leadRef.current?.scrollIntoView({ block: "nearest" });
+
+    // The hosted-capture success branch: a finished conversation becomes a
+    // stored enquiry against the tenant. One attempt per completion; the
+    // event id is stable so a retry of the same submission cannot store it
+    // twice (the server de-duplicates on it).
+    if (capture && !captureSubmitted.current) {
+      captureSubmitted.current = true;
+      void submitCapture(state.lead, state.messages.length);
+    }
     // `state.messages.length` is read at completion; it does not need to
     // re-fire this effect.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isComplete, provider]);
+  }, [isComplete, provider, capture]);
 
   async function send(text: string, contact?: ContactDetails) {
     if (inFlight.current || isBusy || isComplete) return;
@@ -144,6 +225,8 @@ export function QuoteAssistantDemo({ useModel = false }: { useModel?: boolean })
     inFlight.current = false;
     lastRequest.current = null;
     startedAt.current = Date.now();
+    captureSubmitted.current = false;
+    captureEventId.current = "";
     track({ name: "demo_restarted", properties: {} });
     dispatch({ type: "reset", reply: provider.greeting() });
     inputRef.current?.focus();
@@ -183,7 +266,7 @@ export function QuoteAssistantDemo({ useModel = false }: { useModel?: boolean })
               </span>
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-ink">
-                  {DEMO_COMPANY}
+                  {company}
                 </p>
                 <p className="text-slate-body flex items-center gap-1.5 text-xs">
                   <span
@@ -208,14 +291,14 @@ export function QuoteAssistantDemo({ useModel = false }: { useModel?: boolean })
             ref={transcriptRef}
             role="log"
             aria-live="polite"
-            aria-label={`Conversation with ${DEMO_COMPANY}`}
+            aria-label={`Conversation with ${company}`}
             className="h-[24rem] space-y-3 overflow-y-auto px-3 py-4 sm:h-[30rem] sm:px-4"
           >
             {state.messages.map((message, index) => (
               <ChatBubble
                 key={message.id}
                 role={message.role}
-                assistantName={DEMO_COMPANY}
+                assistantName={company}
                 showRole={state.messages[index - 1]?.role !== message.role}
               >
                 {message.text}
@@ -226,7 +309,7 @@ export function QuoteAssistantDemo({ useModel = false }: { useModel?: boolean })
               <div className="animate-message-in flex justify-start">
                 <div className="border-hairline bg-mist rounded-2xl rounded-bl-md border px-4 py-3">
                   <TypingDots />
-                  <span className="sr-only">{DEMO_COMPANY} is typing</span>
+                  <span className="sr-only">{company} is typing</span>
                 </div>
               </div>
             ) : null}
@@ -270,7 +353,29 @@ export function QuoteAssistantDemo({ useModel = false }: { useModel?: boolean })
               </button>
             </div>
           ) : state.inputMode === "contact" ? (
-            <ContactForm disabled={isBusy} onSubmit={submitContact} />
+            <>
+              <ContactForm disabled={isBusy} onSubmit={submitContact} />
+              {capture ? (
+                // Honeypot field, one layer of the capture page's abuse
+                // control alongside the submit-interval check and the rate
+                // limits. Hidden from people; some form-filling bots fill it,
+                // and a filled honeypot means the submission is dropped
+                // server-side without storing anything.
+                <div aria-hidden="true" className="hidden">
+                  <label htmlFor="capture-company-website">
+                    Leave this field empty
+                  </label>
+                  <input
+                    ref={honeypotRef}
+                    id="capture-company-website"
+                    type="text"
+                    name="companyWebsite"
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
+                </div>
+              ) : null}
+            </>
           ) : (
             <Composer
               disabled={isBusy || state.status === "error"}
@@ -297,7 +402,7 @@ export function QuoteAssistantDemo({ useModel = false }: { useModel?: boolean })
         </aside>
       </div>
 
-      {isComplete ? <DemoOutro onRestart={restart} /> : null}
+      {isComplete && showSalesOutro ? <DemoOutro onRestart={restart} /> : null}
     </div>
   );
 }

@@ -2,7 +2,15 @@ import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BRAND, HAS_REGISTRATION_DETAILS } from "@/lib/marketing/brand";
+import {
+  DATABASE_VENDOR_LABEL,
+  EMAIL_DELIVERY_VENDOR_LABEL,
+  RETENTION_DAYS_AFTER_DELIVERY,
+  RETENTION_HARD_CEILING_DAYS,
+} from "@/lib/marketing/legal";
 import { isAssistantModelEnabled } from "@/lib/ai/deepseek";
+import { readLeadsDatabaseConfig } from "@/lib/db/config";
+import { serverFlagEnabled } from "@/lib/env";
 import { Container } from "@/components/marketing/primitives";
 
 export const metadata: Metadata = {
@@ -23,14 +31,21 @@ export const dynamic = "force-dynamic";
  * Written against Articles 13 and 14: controller identity, purposes, legal
  * bases, recipients, transfers, retention, rights and the right to complain.
  * It describes only what the application actually does — nothing here asserts
- * a certification, an audit, or a compliance status.
+ * a certification, an audit, or a compliance status. Like the model bullet,
+ * the database and lead-email bullets render from live server configuration,
+ * so this notice cannot claim a processor that is not actually switched on —
+ * and stops claiming one the moment it is disabled.
  *
  * Settled: the registered address and registration number are filled in
- * (`lib/marketing/brand.ts`), so the "incomplete" banner no longer renders.
+ * (`lib/marketing/brand.ts`); retention periods for stored enquiries are
+ * stated in section 6 and enforced by `/api/retention`.
  *
  * REVIEW BEFORE LAUNCH — factual details only the operator can supply:
  *  - Whether a Data Protection Officer is required (Art. 37). Assumed not.
- *  - Confirmed retention periods once anything is stored server-side.
+ *  - The database vendor's name once provisioned
+ *    (`DATABASE_VENDOR_LABEL` in `lib/marketing/legal.ts`).
+ *  - The lead email vendor's name once that account exists
+ *    (`EMAIL_DELIVERY_VENDOR_LABEL`).
  *  - The transfer safeguard for DeepSeek (Art. 46). See the transfers section:
  *    this is the single biggest open compliance item and is flagged in-page
  *    while unresolved. The model is switched off by default until it is
@@ -69,6 +84,10 @@ function Mail() {
 
 export default function PrivacyPage() {
   const modelEnabled = isAssistantModelEnabled();
+  // Which processors are actually in use is a server-side fact, so these are
+  // resolved per request rather than baked into the page.
+  const databaseLive = readLeadsDatabaseConfig() !== null;
+  const leadEmailLive = serverFlagEnabled("EMAIL_SENDING_ENABLED");
 
   return (
     <Container className="py-12 sm:py-16">
@@ -154,17 +173,20 @@ export default function PrivacyPage() {
           <p>
             <strong className="font-medium text-ink">Setup details.</strong> After
             purchase we ask for your company name, website, a contact name, email
-            and phone number, the areas you cover and the services you offer. At
-            present the setup form does not submit anywhere automatically: it
-            prepares your answers for you to send us by email, and you choose
-            whether to send them. Legal basis: performance of a contract.
+            and phone number, the areas you cover and the services you offer.
+            Submitting the form stores those answers so we can configure your
+            assistant; until a person has checked them against your subscription
+            they are inactive, and nothing runs on your behalf. Legal basis:
+            performance of a contract.
           </p>
           <p>
             <strong className="font-medium text-ink">
               Enquiries from your customers, if you are a customer of ours.
             </strong>{" "}
-            When {BRAND.name} runs on your website, it processes what the person
-            enquiring types in order to produce a structured enquiry for you. For
+            When {BRAND.name} runs on your hosted enquiry page, it processes what
+            the person enquiring types in order to produce a structured enquiry
+            for you. The completed enquiry is stored only so it can be delivered
+            to you reliably, and is deleted on the schedule in section 6. For
             that data <em>you</em> are the controller and we act as your
             processor. See section 7.
           </p>
@@ -203,6 +225,53 @@ export default function PrivacyPage() {
                 {BRAND.name} is sent to DeepSeek for processing.
               </li>
             ) : null}
+            {databaseLive ? (
+              DATABASE_VENDOR_LABEL ? (
+                <li>
+                  <strong className="font-medium text-ink">
+                    {DATABASE_VENDOR_LABEL}:
+                  </strong>{" "}
+                  our EU-region database. Stores customer setup details and
+                  completed enquiries on behalf of our customers, until they are
+                  delivered and deleted (section 6).
+                </li>
+              ) : (
+                <li>
+                  <strong className="font-medium text-ink">
+                    Our database provider:
+                  </strong>{" "}
+                  an EU-region database storing customer setup details and
+                  completed enquiries.{" "}
+                  <span className="text-amber-700">
+                    The provider&rsquo;s name will be stated here before live
+                    traffic; it is not yet confirmed.
+                  </span>
+                </li>
+              )
+            ) : null}
+            {leadEmailLive ? (
+              EMAIL_DELIVERY_VENDOR_LABEL ? (
+                <li>
+                  <strong className="font-medium text-ink">
+                    {EMAIL_DELIVERY_VENDOR_LABEL}:
+                  </strong>{" "}
+                  transactional delivery of completed enquiries to our
+                  customers, sent from linwick.co.uk with replies addressed
+                  straight back to the customer concerned.
+                </li>
+              ) : (
+                <li>
+                  <strong className="font-medium text-ink">
+                    Our email delivery provider:
+                  </strong>{" "}
+                  transactional delivery of completed enquiries.{" "}
+                  <span className="text-amber-700">
+                    The provider&rsquo;s name will be stated here before live
+                    traffic; it is not yet confirmed.
+                  </span>
+                </li>
+              )
+            ) : null}
             <li>
               <strong className="font-medium text-ink">Our email provider:</strong>{" "}
               correspondence sent to {BRAND.contactEmail}.
@@ -220,6 +289,14 @@ export default function PrivacyPage() {
             providers process data outside the European Economic Area: Vercel
             in the United States, and, where the optional AI model behind{" "}
             {BRAND.name} is enabled, DeepSeek in China.
+          </p>
+          <p>
+            The database holding customer setup details and completed enquiries
+            is created in an EU region on purpose, so that data does not leave
+            the EEA at any point of its lifecycle. Enquiry emails are sent from
+            within the EEA to our customer&rsquo;s nominated mailbox; where that
+            mailbox itself sits outside the EEA, that is our customer&rsquo;s
+            arrangement as controller.
           </p>
           <p>
             Transfers to countries without an adequacy decision require
@@ -247,28 +324,52 @@ export default function PrivacyPage() {
             the period our accounting obligations require.
           </p>
           <p>
-            Demo conversations are not retained. We do not currently operate a
-            customer database: there is no account, no login and no stored
-            profile for visitors.
+            Demo conversations are not retained. There is no account, no login
+            and no stored profile for visitors to this website.
           </p>
           <p>
-            We have not yet set fixed retention periods in days, because there is
-            not yet an automated store to enforce them against. When that
-            changes, this section will state the periods.
+            Completed enquiries from customers&rsquo; enquiry pages are stored
+            only until they are delivered, and are deleted{" "}
+            {RETENTION_DAYS_AFTER_DELIVERY} days after successful delivery. No
+            enquiry is kept longer than {RETENTION_HARD_CEILING_DAYS} days after
+            it was received, whatever its status. Both limits are enforced by a
+            scheduled deletion job in our code, not by good intentions.
+          </p>
+          <p>
+            Setup details for an active customer are kept while the subscription
+            lasts, and afterwards only where we need them for accounting or to
+            defend a legal claim.
           </p>
         </Section>
 
         <Section id="processor" heading="7. When we act as your processor">
           <p>
-            If you buy {BRAND.name}, the enquiries it collects on your website
-            are your data. You decide why and how they are processed; we process
-            them on your instructions in order to provide the service. That makes
-            you the controller and us your processor under Art. 28.
+            If you buy {BRAND.name}, the enquiries it collects on your hosted
+            enquiry page are your data. You decide why and how they are
+            processed; we process them on your instructions in order to provide
+            the service. That makes you the controller and us your processor
+            under Art. 28.
           </p>
           <p>
             Art. 28 requires a written data processing agreement between us
-            before that processing starts. Ask for ours at <Mail />, and if you
-            are buying, ask before you go live rather than after.
+            before that processing starts. Our standard one-page agreement,
+            which states what we process, the retention schedule in section 6,
+            the sub-processors listed in section 4, and how we help with data
+            subject requests, is available on request at <Mail />. If you are
+            buying, ask before you go live rather than after. You will be told
+            in advance before new sub-processors are added, and may object.
+          </p>
+          <p>
+            The security measures we apply while holding that data &mdash;
+            EU-region storage, TLS, environment-held secrets, no third-party
+            scripts on enquiry pages &mdash; are described on our{" "}
+            <Link
+              href="/security"
+              className="rounded-md font-medium text-ink underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            >
+              security page
+            </Link>
+            .
           </p>
         </Section>
 
@@ -297,9 +398,12 @@ export default function PrivacyPage() {
             <li>withdraw consent where processing relies on it (Art. 7(3)).</li>
           </ul>
           <p>
-            Email <Mail />. Because the personal data we hold is correspondence
-            and setup details you have sent us, requests are handled by hand. We
-            will respond within one month.
+            Email <Mail />. What we hold is correspondence, setup details, and
+            &mdash; for active customers &mdash; enquiries still inside their
+            retention window. All of it sits in one queryable store and one
+            mailbox, so a request is answered by direct search rather than by
+            guesswork. Requests are handled by hand and we will respond within
+            one month.
           </p>
           <p>
             If you are unhappy with our response you can complain to a

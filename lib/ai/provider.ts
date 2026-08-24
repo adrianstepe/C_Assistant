@@ -11,7 +11,12 @@ import { createRemoteProvider } from "./remote-provider";
  * absence inferred from anything sensitive.
  */
 export function getAssistantProvider(
-  options: { useModel?: boolean } = {},
+  options: { useModel?: boolean; companyName?: string } = {},
 ): AssistantProvider {
-  return options.useModel ? createRemoteProvider() : createDemoEngine();
+  // `companyName` only reaches the deterministic engine. A remote provider
+  // would receive tenant context through its own configuration, not through
+  // this option, which exists for the hosted capture pages.
+  return options.useModel
+    ? createRemoteProvider()
+    : createDemoEngine({ companyName: options.companyName });
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { BRAND } from "@/lib/marketing/brand";
 import { track } from "@/lib/analytics";
@@ -17,10 +17,13 @@ import { primaryButton, secondaryButton } from "@/components/marketing/primitive
 /**
  * Setup questionnaire shown after checkout.
  *
- * Nothing is persisted — there is no database in this application yet. Rather
- * than implying otherwise, the form validates locally and then hands the
- * customer their answers in a form they can actually send. Wiring this to a
- * server is a contained change: replace `handleSubmit`'s success branch.
+ * The success branch of `handleSubmit` posts the answers to `/api/setup`,
+ * where they are stored as an inactive customer row ready for manual
+ * activation — no more copy-paste-into-email handoff. If the POST fails
+ * (datastore down, offline, rate limited), the old behaviour is kept as the
+ * fallback: the answers are laid out ready to send by email, because losing
+ * a brand-new customer's details to a bad hour would be worse than a
+ * low-tech fallback.
  */
 
 interface FormValues {
@@ -114,9 +117,20 @@ function buildSummary(values: FormValues): string {
 export function OnboardingForm() {
   const [values, setValues] = useState<FormValues>(EMPTY);
   const [errors, setErrors] = useState<Errors>({});
-  const [summary, setSummary] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [received, setReceived] = useState<string | null>(null);
+  // The email fallback, shown only when the POST could not go through.
+  const [fallbackSummary, setFallbackSummary] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const honeypotRef = useRef<HTMLInputElement>(null);
+  const mountedAt = useRef<number>(0);
+  const attemptEventId = useRef<string>("");
+
+  // Set on mount rather than during render: `Date.now()` is impure.
+  useEffect(() => {
+    mountedAt.current = Date.now();
+  }, []);
 
   function update(key: FieldKey, value: string) {
     setValues((current) => ({ ...current, [key]: value }));
@@ -137,42 +151,106 @@ export function OnboardingForm() {
       return;
     }
 
-    setSummary(buildSummary(values));
-    setCopied(false);
-    track({
-      name: "onboarding_submitted",
-      properties: { hasWebsite: values.website.trim() !== "" },
-    });
+    void submit();
+  }
+
+  /** The success branch. One stable id per attempt so a retry after a
+   *  failure can never store the submission twice. */
+  async function submit() {
+    if (submitting) return;
+    setSubmitting(true);
+    setFallbackSummary(null);
+    if (!attemptEventId.current) {
+      attemptEventId.current = `set_${crypto.randomUUID()}`;
+    }
+    try {
+      const response = await fetch("/api/setup", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          values,
+          eventId: attemptEventId.current,
+          meta: { elapsedMs: Date.now() - mountedAt.current },
+          // Honeypot: a real person never sees or fills this.
+          companyWebsite: honeypotRef.current?.value ?? "",
+        }),
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | { slug?: string }
+        | null;
+      if (!response.ok || !payload?.slug) throw new Error(`setup POST returned ${response.status}`);
+      track({
+        name: "onboarding_submitted",
+        properties: { hasWebsite: values.website.trim() !== "" },
+      });
+      setReceived(payload.slug);
+    } catch {
+      // Keep the answers in front of the customer with the old handoff as a
+      // fallback rather than dead-ending them.
+      setFallbackSummary(buildSummary(values));
+      setReceived(null);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   async function copySummary() {
-    if (!summary) return;
+    if (!fallbackSummary) return;
     try {
-      await navigator.clipboard.writeText(summary);
+      await navigator.clipboard.writeText(fallbackSummary);
       setCopied(true);
     } catch {
       setCopied(false);
     }
   }
 
-  if (summary) {
+  if (received) {
+    return (
+      <div className="border-hairline rounded-lg border bg-white p-6 sm:p-8">
+        <h2 className="text-lg font-semibold text-ink">
+          Setup details received
+        </h2>
+        <p className="text-slate-body mt-2 text-sm leading-relaxed">
+          Thank you. Everything {BRAND.name} needs is stored and waiting for a
+          person to check it against your subscription and switch your
+          assistant on. We&rsquo;ll confirm your link,
+          {" "}
+          <span className="font-mono text-xs">linwick.co.uk/c/{received}</span>,
+          by email before anything goes live.
+        </p>
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={() => {
+              setReceived(null);
+              setCopied(false);
+            }}
+            className={`${secondaryButton} w-full sm:w-auto`}
+          >
+            Edit answers
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (fallbackSummary) {
     const mailto = `mailto:${BRAND.contactEmail}?subject=${encodeURIComponent(
       `Setup details: ${values.companyName.trim()}`,
-    )}&body=${encodeURIComponent(summary)}`;
+    )}&body=${encodeURIComponent(fallbackSummary)}`;
 
     return (
       <div className="border-hairline rounded-lg border bg-white p-6 sm:p-8">
         <h2 className="text-lg font-semibold text-ink">
-          Your setup details are ready
+          We couldn&rsquo;t submit that automatically
         </h2>
         <p className="text-slate-body mt-2 text-sm leading-relaxed">
-          We haven&rsquo;t built the part that stores this yet, so nothing has
-          been sent anywhere. Send it across and we&rsquo;ll start configuring{" "}
-          {BRAND.name}.
+          Nothing was lost. Send your answers across by email instead and
+          we&rsquo;ll start configuring {BRAND.name}.
         </p>
 
         <pre className="border-hairline bg-mist mt-5 overflow-x-auto rounded-lg border px-4 py-3 text-xs leading-relaxed whitespace-pre-wrap text-ink">
-          {summary}
+          {fallbackSummary}
         </pre>
 
         <div className="mt-5 flex flex-col gap-3 sm:flex-row">
@@ -197,7 +275,10 @@ export function OnboardingForm() {
           </button>
           <button
             type="button"
-            onClick={() => setSummary(null)}
+            onClick={() => {
+              setFallbackSummary(null);
+              setCopied(false);
+            }}
             className="text-slate-body hover:text-ink rounded-lg px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           >
             Edit answers
@@ -234,6 +315,22 @@ export function OnboardingForm() {
             : `${errorCount} answers need checking before you can send this.`}
         </p>
       ) : null}
+
+      {/* Honeypot: hidden from people; a filled field means the submission is
+          dropped server-side without storing anything. */}
+      <div aria-hidden="true" className="hidden">
+        <label htmlFor="onboarding-company-website">
+          Leave this field empty
+        </label>
+        <input
+          ref={honeypotRef}
+          id="onboarding-company-website"
+          type="text"
+          name="companyWebsite"
+          tabIndex={-1}
+          autoComplete="off"
+        />
+      </div>
 
       <fieldset className="mt-6">
         <legend className="text-xs font-semibold tracking-[0.12em] text-ink uppercase">
@@ -334,8 +431,12 @@ export function OnboardingForm() {
         </div>
       </fieldset>
 
-      <button type="submit" className={`${primaryButton} mt-7 w-full sm:w-auto`}>
-        Continue
+      <button
+        type="submit"
+        disabled={submitting}
+        className={`${primaryButton} mt-7 w-full sm:w-auto disabled:cursor-not-allowed disabled:opacity-50`}
+      >
+        {submitting ? "Sending" : "Continue"}
       </button>
     </form>
   );

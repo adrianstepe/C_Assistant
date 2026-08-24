@@ -1,21 +1,34 @@
 import type { OrderEvent } from "@/lib/stripe/webhook";
+import { readLeadsDatabaseConfig } from "@/lib/db/config";
+import { getLeadsDatabase } from "@/lib/db/client";
+import { ensureSchema, insertOrderEvent } from "@/lib/db/store";
 
 /**
  * Where confirmed billing events go.
  *
- * Right now: a structured log line, which on Vercel is a searchable, retained
- * record — enough to answer "did that renewal go through?" for the first
- * handful of customers without inventing a datastore first.
+ * The log line always happens first, so an event is visible in Vercel's
+ * searchable log even if persistence fails. When `LEADS_DATABASE_URL` is set,
+ * it is then written to the `leads` table with de-duplication on `eventId` —
+ * Stripe retries until it gets a 2xx and can deliver the same event more than
+ * once even when it does, so the store's UNIQUE constraint is what turns a
+ * redelivery into a no-op.
  *
- * This is deliberately the only seam. When orders need to be persisted, or a
- * failed payment needs to reach a human inbox, `record` is the single function
- * that changes; nothing upstream of it knows or cares.
+ * This is deliberately still the only seam. Nothing upstream of `record`
+ * knows or cares whether a datastore is configured.
  *
- * Two things a real implementation must handle that this one does not:
+ * Failure semantics (the route depends on them):
  *
- *  - **De-duplication.** Stripe retries until it gets a 2xx, and can deliver
- *    the same event more than once even when it does. Dedupe on `eventId`,
- *    which is stable across retries, before writing anything.
+ * - No database configured: log only, never throws. Exactly the behaviour the
+ *   application had before the datastore existed, so setting nothing changes
+ *   nothing.
+ * - Database configured but unavailable or unwritable: throws. The webhook
+ *   route turns that into a 500 and Stripe retries for up to three days,
+ *   which is the designed recovery rather than silent loss.
+ * - Redelivered event: succeeds quietly as a no-op via the UNIQUE constraint
+ *   on `event_id`.
+ *
+ * One duty from the original docstring remains open on purpose:
+ *
  *  - **Ordering.** Events are not guaranteed to arrive in the order they
  *    occurred. Do not derive subscription state by replaying them in receipt
  *    order; read the current state from Stripe when it matters.
@@ -52,12 +65,33 @@ function money(amount: number | undefined, currency: string | undefined): string
 }
 
 /**
- * Records a billing event. Throwing here is meaningful: the route turns it
- * into a 500 so Stripe retries, rather than silently losing the event.
+ * Records a billing event: always to the log, and to the datastore when one
+ * is configured. Throwing here is meaningful: the route turns it into a 500
+ * so Stripe retries, rather than silently losing the event.
  */
 export async function record(event: OrderEvent): Promise<void> {
   // Failed payments are the one case that needs a human before the customer
   // notices, so they are logged at error level to stand out in Vercel's UI.
   const log = event.kind === "invoice.payment_failed" ? console.error : console.info;
   log(`[stripe] ${summarise(event)}`, JSON.stringify(event));
+
+  await persist(event);
+}
+
+/**
+ * The persistence half of `record`, split out so the logging contract above
+ * stays obvious at a glance.
+ *
+ * Every failure path throws — including schema preparation — because the only
+ * time this runs is with a database configured, and a write we could not make
+ * must reach Stripe as a retryable failure, not disappear.
+ */
+async function persist(event: OrderEvent): Promise<void> {
+  const config = readLeadsDatabaseConfig();
+  // No store configured: today's behaviour, unchanged. Nothing to retry.
+  if (!config) return;
+
+  const sql = getLeadsDatabase(config);
+  await ensureSchema(sql);
+  await insertOrderEvent(sql, event);
 }
