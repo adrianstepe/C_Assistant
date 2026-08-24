@@ -211,9 +211,9 @@ from Stripe rather than replaying events.
 **The onboarding form persists as an inactive tenant row.** It POSTs to
 `/api/setup`, which stores the answers in the `customers` table with
 `enabled = false` plus an audit row (`kind = 'setup_request'`) in `leads`.
-Going live stays a deliberate human act — see "Activating a tenant" below.
-A retried submission de-duplicates on its event id and can never mint a second
-tenant row.
+Going live happens automatically once a verified payment is also on file —
+see "How a tenant goes live" below. A retried submission de-duplicates on its
+event id and can never mint a second tenant row.
 
 Two things to decide before taking real money:
 
@@ -226,31 +226,50 @@ Two things to decide before taking real money:
 - **Refunds.** `/terms` states there is no fixed policy yet and invites contact.
   Honest, but it is not a policy, and it should become one.
 
-### Activating a tenant (the one deliberate manual step)
+### How a tenant goes live (automatic since provisioning-v1), and the trade-off
 
-Payment and the onboarding form never make a tenant live by themselves. What
-exists after a customer pays and submits the form:
+A tenant is enabled automatically when **both** of these exist, in either
+arrival order:
 
-- a `customers` row with `enabled = false`, holding company name, contact,
-  recipient email, services/areas/notes;
-- a `setup_request` row in `leads` visible at `/admin/leads`;
-- `order_event` rows from the webhook proving what was paid.
+1. a genuinely completed, signature-verified Stripe payment — recorded by the
+   webhook seam (`checkout.completed` with `payment_status: paid`, or an
+   `invoice.paid`); and
+2. a submitted onboarding/setup form — the `customers` row itself.
 
-Going live is then one statement, run by whoever operates the database:
+Matching is by email address (case-insensitive): the buyer's Stripe email
+against the contact/lead email on the setup form. When the second fact
+arrives, the tenant flips live in the same request, an audit row
+(`kind = 'tenant_enabled'`) lands in `leads`, and Adrians receives a
+notification email synchronously (not via the once-a-day Hobby cron sweep).
+
+**The trade-off, stated plainly:** automatic enablement removes the human
+look that used to happen before a tenant launched. Faster onboarding is bought
+by going live with no manual review step. What keeps that honest:
+
+- both enabling facts are things the application *proved* (a verified webhook
+  signature; a stored payment event; the customer's own submitted details) —
+  no public request can flip `enabled` directly;
+- every automatic flip writes an admin-visible audit row;
+- `/admin/leads` has Pause / Re-enable buttons per tenant (server actions
+  behind the same Basic auth as the page). Pausing takes the capture page and
+  its intake dark immediately; nothing is deleted. Check each new tenant
+  there after the "went live" alert arrives.
+
+The SQL override still works exactly as before, for anything the buttons do
+not cover:
 
 ```sql
-update customers set enabled = true, updated_at = now() where slug = '<slug>';
+update customers set enabled = false, updated_at = now() where slug = '<slug>';
 ```
 
-The capture page (`/c/<slug>`) and its enquiry intake come online immediately;
-an unknown or still-disabled slug is indistinguishable from a 404, on purpose.
-There is no admin UI for this flip: `/admin/leads` is read-only by design
-(the kill switch should not be one misclick next to a table of rows). If
-activation ever needs to get faster than one SQL statement, the change belongs
-in a small authenticated admin action — not in the public setup endpoint.
+An unknown or paused slug's capture page is indistinguishable from a 404, on
+purpose.
 
-Suspending a tenant is the same column set back to `false`; nothing is
-deleted.
+**Owner notification gating.** The "someone bought" email rides the existing
+mail seam and fires only when `EMAIL_SENDING_ENABLED` is true (with
+`RESEND_API_KEY` set) **and** `OWNER_NOTIFICATION_EMAIL` names a mailbox.
+Unset either and no alert is attempted — the suppression is logged at the
+moment it happens, so silence is explainable.
 
 ## Internal: prospect tracker (`/admin/leads`)
 

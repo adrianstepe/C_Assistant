@@ -17,15 +17,22 @@ import {
 } from "@/lib/db/store";
 import { clientKey } from "@/lib/rate-limit";
 import { checkSharedRateLimit } from "@/lib/rate-limit/shared";
+import { autoEnableAfterSetupSubmission } from "@/lib/provisioning/auto-enable";
 
 /**
  * Public intake for the post-checkout setup questionnaire.
  *
  * Replaces the copy-paste-an-email handoff the form used to end with: the
- * answers land straight in the datastore as an INACTIVE customer row, ready
- * for a human to review, confirm payment against, and switch on by setting
- * `enabled`. Nothing about this endpoint can make a tenant live — that is
- * the kill-switch column's whole point.
+ * answers land straight in the datastore as an INACTIVE customer row.
+ *
+ * Activation used to be manual-only; since provisioning-v1 this endpoint may
+ * flip `enabled` itself — but only when a durably recorded, signature-verified
+ * Stripe payment for the SAME contact email already exists, i.e. both halves
+ * of go-live are satisfied no matter which arrived first. A submission with
+ * no matching payment still stores exactly what it always did: an inactive
+ * row waiting for money to arrive via the webhook seam (or for a human).
+ * The kill switch keeps its meaning: pausing stays possible at any time from
+ * /admin/leads, and takes the capture page offline immediately.
  *
  * Status codes follow the same discipline as `/api/leads`:
  * 400 unusable body, 413 too large, 429 limited, 500 storage failure,
@@ -207,6 +214,9 @@ export async function POST(request: Request): Promise<NextResponse> {
     const existingSlug = await findSetupRequestSlug(sql, eventId);
     if (existingSlug) {
       console.info(`[setup] duplicate setup submission ${eventId}; acknowledged`);
+      // A retry can be the second half of go-live: money may have arrived
+      // since the first submission was stored.
+      await settleAutomaticActivation(sql, existingSlug, values);
       return NextResponse.json(
         { received: true, slug: existingSlug, status: "received" },
         { status: 201 },
@@ -237,12 +247,14 @@ export async function POST(request: Request): Promise<NextResponse> {
       if (!retried.inserted) {
         return NextResponse.json({ error: "Could not store setup." }, { status: 500 });
       }
+      await settleAutomaticActivation(sql, fallbackSlug, values);
       return NextResponse.json(
         { received: true, slug: fallbackSlug, status: "received" },
         { status: 201 },
       );
     }
 
+    await settleAutomaticActivation(sql, base, values);
     return NextResponse.json({ received: true, slug: base, status: "received" }, { status: 201 });
   } catch (error) {
     console.error(`[setup] failed to store submission ${eventId}`, error);
@@ -259,4 +271,37 @@ function normaliseEventId(value: unknown, email: string, company: string): strin
   }
   const hash = createHash("sha256").update(`${email}|${company}`).digest("hex").slice(0, 32);
   return `set_h_${hash}`;
+}
+
+/**
+ * Best-effort automatic activation once the submission is durably stored.
+ *
+ * Swallows its own errors on purpose: the submission was accepted under the
+ * 201 contract, and a transient datastore hiccup during activation must not
+ * tell the customer their details were lost. If activation fails here, the
+ * admin panel still shows both facts side by side (inactive tenant, paid
+ * event) and the manual pause/enable control remains available.
+ */
+async function settleAutomaticActivation(
+  sql: ReturnType<typeof getLeadsDatabase>,
+  slug: string,
+  values: SetupValues,
+): Promise<void> {
+  try {
+    const outcome = await autoEnableAfterSetupSubmission(sql, {
+      slug,
+      companyName: values.companyName,
+      // Both addresses are candidates: the buyer's contact email and the
+      // (possibly different) nominated lead inbox.
+      emails: [values.email, values.leadEmail],
+    });
+    if (outcome.enabledAny) {
+      console.info(`[setup] ${slug} went live automatically; verified payment on file`);
+    }
+  } catch (error) {
+    console.error(
+      `[setup] automatic activation could not be applied for ${slug}; submission is stored`,
+      error,
+    );
+  }
 }
