@@ -110,15 +110,20 @@ Namecheap forwarders.
 
 - [!] **1. Decide: leave checkout live, or clear one Stripe price id.**
   → ADRIANS TO DO #4. Plan's recommendation: close it for the day.
-- [!] **2. `ADMIN_USERNAME` / `ADMIN_PASSWORD` on Vercel.** → ADRIANS TO DO #1.
+- [x] **2. `ADMIN_USERNAME` / `ADMIN_PASSWORD` on Vercel.** Done by Adrians,
+  5 Sep 2026; `/admin/leads` answers 401 rather than 503.
   Nothing to build; `/admin/leads` fails closed until they exist.
-- [!] **3. EU Postgres, `LEADS_DATABASE_URL`.** → ADRIANS TO DO #2. Schema,
+- [x] **3. EU Postgres, `LEADS_DATABASE_URL`.** Done by Adrians, 5 Sep 2026;
+  EU region confirmed by him (not independently verifiable from here). Schema,
   client and `ensureSchema()` are built and exercised by every suite above.
-- [!] **4. Resend: verify the domain, sending key, `EMAIL_SENDING_ENABLED=true`,
-  webhook and signing secret.** → ADRIANS TO DO #3. The mail seam, retry ladder,
+- [x] **4. Resend: domain verified, sending key, `EMAIL_SENDING_ENABLED=true`,
+  webhook and signing secret.** Done by Adrians, 5 Sep 2026. DNS verified from
+  the authoritative nameserver; `/api/email-dispatch` 401 and the Resend webhook
+  400 (not 503) prove all four variables live. The mail seam, retry ladder,
   bounce webhook and human escalation are built and pass 41 checks.
 - [x] **5. Review, merge, deploy `provisioning-v1`.** Merged as `2b51b48`, 33/33
-  on the merge result. *Deploying* it still depends on the env vars above.
+  on the merge result. Deployed 5 Sep 2026 and confirmed live: the new
+  cancellation copy is on `/checkout/success` and the stale line is gone.
 - [x] **5b. `OWNER_NOTIFICATION_EMAIL` read and used correctly, and loud when
   unset.** Confirmed and then hardened this session:
   - `readOwnerNotificationConfig()` gates on `EMAIL_SENDING_ENABLED` +
@@ -168,8 +173,12 @@ Namecheap forwarders.
 intervention, an enabled tenant, a live capture page, an owner notification and
 a delivered enquiry email — and `/admin/leads` shows all four.
 
-**Still open in W1: items 1, 2, 3, 4 and 6 — every one of them an ADRIANS TO DO.
-No code is outstanding.**
+**Still open in W1: items 1 and 6 only** — the checkout decision and the
+production card purchase. Both are ADRIANS TO DO. No code is outstanding, and
+every environment variable this release needs is live.
+
+**W1 status, 5 Sep 2026 evening:** configuration complete. The release now
+stands or falls on the acceptance test.
 
 ### W2 — Make the bought thing worth £79/month
 
@@ -286,7 +295,8 @@ automatically.
 
 ### Release 1 blockers — in this order
 
-- [ ] **1. Set `ADMIN_USERNAME` and `ADMIN_PASSWORD` on Vercel.**
+- [x] **1. Set `ADMIN_USERNAME` and `ADMIN_PASSWORD` on Vercel.**
+  *(Done 5 Sep 2026.)*
 
   Vercel → Settings → Environment Variables → Add, scope **Production**:
 
@@ -306,7 +316,7 @@ automatically.
   and password. Expect a red banner at the top saying *"No one is being told
   when a customer buys"* — that is correct at this stage and clears in step 3.
 
-- [ ] **2. Provision an EU-region Postgres instance and set
+- [x] **2. Provision an EU-region Postgres instance and set
   `LEADS_DATABASE_URL`.**
 
   ADR-1 requires an **EU region** — not US. The vendor is deliberately open:
@@ -327,7 +337,8 @@ automatically.
   and shows empty Customers and Leads tables instead.
 
 
-- [ ] **3. Resend — and the DNS work, which is all on Namecheap.**
+- [x] **3. Resend — and the DNS work, which is all on Namecheap.**
+  *(Done 5 Sep 2026, including both forwarders and DMARC on each domain.)*
 
   **What the DNS actually looks like today** (verified by lookup, 5 Sep 2026 —
   re-check before trusting it):
@@ -508,10 +519,14 @@ automatically.
 
 - [ ] **4. Decide: leave checkout live during this work, or close it.**
 
-  The plan's recommendation is **close it for the day**. The reasoning: it is
-  one env var each way, the disabled state on `/pricing` is already written and
-  honest, and the funnel currently produces no data worth losing — whereas a
-  stranger buying mid-configuration gets a broken delivery.
+  The plan's recommendation was **close it for the day**, on the reasoning that
+  a stranger buying mid-configuration would get a broken delivery.
+
+  **That reasoning has expired.** As of 5 Sep 2026 the configuration is
+  complete — database, mail, webhook secret, admin and owner alert are all live
+  and probe-verified. A stranger buying now gets the same working path the
+  acceptance test is about to walk. **Recommendation is now: leave it open.**
+  Closing it would only cost a sale for no remaining benefit.
 
   **To close it:** delete (or blank) `STRIPE_PRICE_SETUP` on Vercel and
   redeploy. `/pricing` renders its disabled state; nobody can start a checkout.
@@ -519,7 +534,7 @@ automatically.
 
   Note your choice here either way.
 
-- [ ] **4b. Get this branch deployed.**
+- [x] **4b. Get this branch deployed.** *(Pushed and live, 5 Sep 2026.)*
 
   `main` is committed locally but **not pushed** — Claude was not asked to push,
   and pushing `main` is what triggers the Vercel production deploy.
