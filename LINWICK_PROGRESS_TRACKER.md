@@ -162,6 +162,15 @@ No code is outstanding.**
       page, the cancellation mechanism in the terms). A full page-by-page pass
       is still outstanding — known survivors: the snippet claim (W2.3) and
       "your rules, not generic ones" (W2.2).
+- [x] 6. **README deployment table corrected.** Found while writing the manual
+      steps below: it listed `NEXT_PUBLIC_SITE_URL` as **Required**, which has
+      been false since production started taking its origin from
+      `CANONICAL_ORIGIN` (`.env.example` already said so; the README had not
+      caught up). Setting it in production does nothing. The table now lists
+      what a production deploy actually needs — including `LEADS_DATABASE_URL`,
+      the three Resend variables, `OWNER_NOTIFICATION_EMAIL` and
+      `CRON_SECRET`, none of which were mentioned — and the paragraph explains
+      what the variable is still for (naming a preview's own host).
 
 ### W4 — Execute the design system already planned (D1–D3)
 
@@ -204,6 +213,7 @@ No code is outstanding.**
 
 ---
 
+
 ## ADRIANS TO DO
 
 Dashboards, DNS, env vars, accounts, payments and judgement calls. Claude has
@@ -212,68 +222,208 @@ no credentials for any of these and must not attempt them.
 **Never ticked off by Claude. Tell Claude in a later session and it will be
 marked done here then.**
 
+Everything in "Release 1 blockers" is one sitting — roughly 60–90 minutes, most
+of it waiting for DNS. Do them in the order given: each one makes the next one
+verifiable.
+
+### Before you start — three facts to have to hand
+
+| Thing | Value | Where it comes from |
+|---|---|---|
+| Vercel env var screen | Project → **Settings → Environment Variables** | scope every variable below to **Production** |
+| Sending address | `enquiries@linwick.co.uk` | hardcoded, `lib/email/resend.ts:100` |
+| Your address | `adrians@stepedigital.com` | `CONTACT_EMAIL`, `lib/marketing/brand.ts:51` |
+
+Note the two are on **different domains**. Resend must verify
+**`linwick.co.uk`** (the sending domain), while escalations and owner alerts go
+to the `stepedigital.com` address. That is intentional and nothing needs
+changing — but it does mean `enquiries@linwick.co.uk` should be able to
+**receive** mail, because that is where bounces land. If no mailbox exists
+there, add a forward to `adrians@stepedigital.com` while you are in the DNS.
+
+Already set in production, from the plan's probes — do not re-do these:
+`CRON_SECRET` (proved by `/api/retention` answering 401), and the three Stripe
+variables (checkout works today). `EMAIL_DISPATCH_SECRET` is **not** needed:
+the route falls back to `CRON_SECRET`, which Vercel's scheduler supplies
+automatically.
+
+---
+
 ### Release 1 blockers — in this order
 
 - [ ] **1. Set `ADMIN_USERNAME` and `ADMIN_PASSWORD` on Vercel.**
-  The cheapest item on the list, and it restores all visibility. `/admin/leads`
-  returns `503` today because it fails closed without them. Do this first so
-  you can watch every later step land.
+
+  Vercel → Settings → Environment Variables → Add, scope **Production**:
+
+  ```
+  ADMIN_USERNAME=adrians
+  ADMIN_PASSWORD=<30+ random characters from a password manager>
+  ```
+
+  The cheapest item on the list, and it restores all visibility — do it first
+  so you can watch every later step land. `/admin/leads` returns `503` today
+  because it fails closed without both. It is HTTP Basic auth over Vercel's
+  TLS, not an identity system, so the password does the whole job: make it long
+  and random, and store it in your password manager.
+
+  **Check it worked** (after the redeploy in step 4b): open
+  `https://www.linwick.co.uk/admin/leads`. The browser prompts for a username
+  and password. Expect a red banner at the top saying *"No one is being told
+  when a customer buys"* — that is correct at this stage and clears in step 3.
 
 - [ ] **2. Provision an EU-region Postgres instance and set
-  `LEADS_DATABASE_URL`.** (ADR-1: EU region, not US.) Without it no tenant can
-  exist, no enquiry can be stored, and nothing appears in `/admin/leads`.
-  Schema creation is automatic — `ensureSchema()` runs on first use.
+  `LEADS_DATABASE_URL`.**
 
-- [ ] **3. Resend — all of this in one sitting:**
-  1. Verify `linwick.co.uk` in Resend.
-  2. Add the **SPF** and **DKIM** records it gives you to DNS.
+  ADR-1 requires an **EU region** — not US. The vendor is deliberately open:
+  Neon, Supabase, Vercel Postgres and Turso all speak the Postgres wire
+  protocol and all work. Neon's free tier is enough for now and the fastest to
+  stand up.
+
+  1. Create the project, choosing an **EU region** (Frankfurt or Ireland).
+  2. Copy the **connection string** it gives you, in full — including any
+     `?sslmode=require` the vendor appends. It looks like
+     `postgres://user:pass@host.eu-central-1.aws.neon.tech/dbname?sslmode=require`.
+  3. On Vercel, add it as `LEADS_DATABASE_URL`, scope **Production**.
+
+  There is no migration step and no SQL to run: `ensureSchema()` creates every
+  table on first use.
+
+  **Check it worked:** `/admin/leads` stops saying "No datastore configured"
+  and shows empty Customers and Leads tables instead.
+
+- [ ] **3. Resend — do all of this in one sitting.**
+
+  1. Create the Resend account and add the domain **`linwick.co.uk`**.
+  2. Resend shows you **SPF** and **DKIM** records. Add both at your DNS host,
+     exactly as given. Wait for Resend to show the domain as **Verified** —
+     usually minutes, occasionally an hour.
   3. **Add a DMARC record while you are already in the DNS.** You will not want
-     to come back for it.
-  4. Create the sending API key and set `RESEND_API_KEY`, then set
-     **`EMAIL_SENDING_ENABLED=true`** — the key alone does nothing, the flag is
-     a deliberate second gate.
-  5. Set **`RESEND_WEBHOOK_SECRET`** from Resend's webhook config page, and
-     register the webhook endpoint.
+     to come back for it, and it materially helps deliverability into Gmail and
+     Microsoft. Start in monitoring mode:
 
-  Set **`OWNER_NOTIFICATION_EMAIL`** here too. Without it a customer can buy,
-  go live, and nothing tells you. `/admin/leads` now shows a red banner naming
-  the missing variable until it is set.
+     ```
+     Type:  TXT
+     Name:  _dmarc
+     Value: v=DMARC1; p=none; rua=mailto:adrians@stepedigital.com
+     ```
 
-- [ ] **4. Decide: leave checkout live during this work, or clear one Stripe
-  price id so pricing shows its disabled state honestly.**
-  The plan's recommendation is **close it for the day** — one env var each way,
-  the disabled state is already written and honest, and the funnel produces no
-  data worth losing. Your call; note it here either way.
+     `p=none` reports without rejecting anything, which is what you want while
+     the domain is new. Tighten to `p=quarantine` after the seed test in W6.4
+     shows clean results.
+  4. While in the DNS: confirm `enquiries@linwick.co.uk` can receive mail, or
+     add a forward to `adrians@stepedigital.com`. Replies from enquirers go
+     straight to the customer via `Reply-To`, so this mailbox only needs to
+     catch bounces — but it does need to catch them.
+  5. Create a **sending API key** in Resend. On Vercel, scope **Production**:
 
-- [ ] **4b. Get this branch deployed.** `main` is committed locally but not
-  pushed — Claude was not asked to push, and pushing `main` is what triggers
-  the Vercel production deploy. Push it (or tell Claude to) once you are ready
-  for the provisioning changes to be live, and confirm the deployment succeeded
-  before step 5. Steps 1-3 can be done before or after; the env vars only take
-  effect on a deployment that comes after they are set, so if you set them last,
-  redeploy.
+     ```
+     RESEND_API_KEY=re_...
+     EMAIL_SENDING_ENABLED=true
+     ```
+
+     The key alone does nothing. `EMAIL_SENDING_ENABLED` is a deliberate second
+     gate so that a stray credential can never start sending on its own; it
+     must be the literal string `true`.
+  6. Add a **webhook endpoint** in Resend pointing at
+     `https://www.linwick.co.uk/api/webhooks/resend`, subscribed to **all five**
+     of: `email.sent`, `email.delivered`, `email.delivery_delayed`,
+     `email.bounced`, `email.complained`. Copy the endpoint's **signing
+     secret** (`whsec_...`) from Resend's webhook config page:
+
+     ```
+     RESEND_WEBHOOK_SECRET=whsec_...
+     ```
+
+     Without it that route answers `503` and accepts nothing — enquiries would
+     still send, but would stay stuck at `pending` instead of confirming to
+     `sent`.
+  7. Set the owner alert recipient:
+
+     ```
+     OWNER_NOTIFICATION_EMAIL=adrians@stepedigital.com
+     ```
+
+     Without it a customer can buy, go live, and nothing tells you.
+     `/admin/leads` shows a red banner naming the missing variable until it is
+     set — that banner disappearing is your confirmation.
+
+- [ ] **4. Decide: leave checkout live during this work, or close it.**
+
+  The plan's recommendation is **close it for the day**. The reasoning: it is
+  one env var each way, the disabled state on `/pricing` is already written and
+  honest, and the funnel currently produces no data worth losing — whereas a
+  stranger buying mid-configuration gets a broken delivery.
+
+  **To close it:** delete (or blank) `STRIPE_PRICE_SETUP` on Vercel and
+  redeploy. `/pricing` renders its disabled state; nobody can start a checkout.
+  **To reopen:** put the price id back and redeploy.
+
+  Note your choice here either way.
+
+- [ ] **4b. Get this branch deployed.**
+
+  `main` is committed locally but **not pushed** — Claude was not asked to push,
+  and pushing `main` is what triggers the Vercel production deploy.
+
+  ```
+  git push origin main
+  ```
+
+  (Or ask Claude to run it.) Then watch the deployment in Vercel until it
+  reports **Ready**.
+
+  **The ordering trap:** environment variables only take effect on a deployment
+  made *after* they are set. If you set any variable after this push, use
+  Vercel's **Redeploy** on the latest deployment before step 5. Simplest safe
+  order: do steps 1–4 first, push last.
+
+  Six commits are waiting: the provisioning merge, the three claim repairs, and
+  this tracker.
 
 - [ ] **5. THE ACCEPTANCE TEST — buy your own product in production with a real
-  card.** Only once every env var above is set **and** this branch is deployed.
-  Walk the whole path and confirm each step:
-  1. Pay with a real card at the live checkout.
-  2. Fill in the setup form on `/checkout/success`.
-  3. Confirm the tenant is **enabled automatically** — no manual SQL.
-  4. Confirm the owner notification email arrives.
-  5. Open the capture page at `/c/<slug>` and complete a conversation.
-  6. Confirm the enquiry email arrives at the nominated address.
-  7. Confirm all four are visible in `/admin/leads`.
-  8. **Refund yourself.**
+  card.** Only once every variable above is set **and** the deployment that
+  followed them is Ready.
+
+  Walk the whole path and confirm each step. Have `/admin/leads` open in a
+  second tab throughout.
+
+  1. Go to `/pricing` and pay with a **real card**. £149 + £79 will actually
+     leave your account; you refund it at step 8.
+  2. You land on `/checkout/success`. Fill in the setup form there.
+  3. **Confirm the tenant is enabled automatically.** In `/admin/leads`, the new
+     row under Customers shows **enabled: yes** with no action from you. This is
+     the single most important assertion in the test — it is the thing that was
+     a manual SQL flip before this release.
+  4. **Confirm the owner notification email arrives** at
+     `adrians@stepedigital.com`, subject *"Linwick: &lt;company&gt; went live
+     automatically"*. Within seconds, not on the daily cron.
+  5. Open the capture page at `/c/<slug>` — the slug is in the Customers table —
+     and complete a full conversation as if you were an enquirer.
+  6. **Confirm the enquiry email arrives** at whichever address you nominated on
+     the setup form. Also within seconds: capture dispatches on the fast path,
+     and the daily cron is only a backstop for retries.
+  7. **Confirm all four are visible in `/admin/leads`:** the order event, the
+     setup submission, the enabled tenant, and the enquiry — the enquiry's
+     status reading `sent` (not `pending`, which would mean the Resend webhook
+     from step 3.6 is not wired).
+  8. **Refund yourself** in the Stripe dashboard, and cancel the subscription.
 
   **This is the acceptance test for the entire release.** Nothing else in the
   plan proceeds until it passes: **no further cold email, and no W2 work**,
   until Adrians confirms that it did.
 
+  If a step fails, the failure is almost always the variable from the step of
+  the same number: no tenant enabled → check the Stripe webhook endpoint and
+  `LEADS_DATABASE_URL`; no owner email → `OWNER_NOTIFICATION_EMAIL` or
+  `EMAIL_SENDING_ENABLED`; enquiry stuck at `pending` →
+  `RESEND_WEBHOOK_SECRET`; `/admin/leads` 503 → the two admin variables.
+
 ### Not blocking Release 1, but long lead times — start when you can
 
 - [ ] **6. VAT (T-013).** Latvian company, digital service, UK business
   customers, checkout already live. Stripe's `tax_behavior` is **immutable per
-  price**, so this shapes prices you cannot later edit. Get the professional
+  price**, so this shapes prices you cannot later edit — changing it means
+  creating new prices and repointing the two env vars. Get the professional
   answer.
 - [ ] **7. Trademark search:** LINWICK, classes 9/35/42, UK IPO — before any
   further brand spend.

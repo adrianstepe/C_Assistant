@@ -378,19 +378,24 @@ Deploys to Vercel with no extra configuration. Before the first deploy, set:
 
 | Variable | Why |
 | --- | --- |
-| `NEXT_PUBLIC_SITE_URL` | **Required.** The real public URL, no trailing slash. |
 | `ADMIN_USERNAME`, `ADMIN_PASSWORD` | Otherwise `/admin` returns 503. |
 | `STRIPE_SECRET_KEY`, `STRIPE_PRICE_SETUP`, `STRIPE_PRICE_MONTHLY` | Otherwise checkout is disabled in production. |
+| `LEADS_DATABASE_URL` | Otherwise no tenant can exist, no enquiry is stored, and `/admin/leads` shows "not configured". |
+| `EMAIL_SENDING_ENABLED`, `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET` | Otherwise enquiries are stored but never delivered, and `/api/email-dispatch` answers 503. |
+| `OWNER_NOTIFICATION_EMAIL` | Otherwise nothing tells you a customer bought. `/admin/leads` shows a banner while it is missing. |
+| `CRON_SECRET` | Authenticates the two scheduled routes in `vercel.json`; `/api/retention` and `/api/email-dispatch` both fail closed without it. |
 | `ASSISTANT_MODEL_ENABLED` | Leave unset. Off by default; must stay off until a GDPR Chapter V transfer basis exists. |
 | `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL` | Optional, and inert while the flag above is off. Without them the assistant runs offline. |
 
-`NEXT_PUBLIC_SITE_URL` matters more than it looks. Without it the app falls
-back to Vercel's deployment URL, and in local development to
-`http://localhost:3000`. It will **never** emit a localhost URL in production —
-it omits the canonical tag and refuses to create a Stripe session rather than
-sending a paying customer somewhere that does not resolve. That is the correct
-behaviour, but it means a missing variable degrades checkout rather than
-silently half-working.
+`NEXT_PUBLIC_SITE_URL` is **not** in that list, and deliberately so. A
+production deployment now takes its origin from `CANONICAL_ORIGIN` in
+`lib/marketing/brand.ts` — which domain the public site is indexed under is a
+fact about the brand, not a deployment setting, and leaving it to a dashboard
+variable is how the live site once published a canonical tag pointing at a
+stale preview. The variable still names the host for NON-production
+deployments, ahead of Vercel's own URL, so previews keep their own hostname and
+a tester is never dropped onto the live site mid-checkout. See the resolution
+order in `resolveSiteUrl()` in [`lib/env.ts`](lib/env.ts).
 
 ## Environment variables
 
