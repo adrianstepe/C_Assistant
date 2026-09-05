@@ -335,19 +335,36 @@ automatically.
   that address in the From header of every enquiry, and today mail to it
   bounces.
 
-  **3b. Add the domain in Resend.**
+  **3b. Add the domain in Resend — and add the ROOT domain, not a subdomain.**
 
-  Create the account, add **`linwick.co.uk`**, and let Resend show you its
-  records. **Read what it actually gives you** — the values below are the usual
-  shape, not a promise, and Resend's regions and record names change:
+  Resend's "add domain" screen nudges you towards `send.yourdomain.com`. **Do
+  not take it here.** Register **`linwick.co.uk`** itself.
 
-  - TXT, host `resend._domainkey` — the DKIM key. This is the one that makes
-    verification pass.
-  - TXT, host `send` — an SPF for the bounce subdomain.
-  - MX, host `send` — the bounce feedback address. See §3d.
+  Resend authorises the exact domain you verify. Verifying
+  `send.linwick.co.uk` does **not** authorise `enquiries@linwick.co.uk` — and
+  that address is hardcoded as `SENDER_ADDRESS` in `lib/email/resend.ts`,
+  because ADR-2 settled it and `/privacy` says enquiries are "sent from
+  linwick.co.uk". Send from an unverified domain and Resend returns a 4xx,
+  which `sendLeadEmail()` classifies as **permanent** — so the enquiry skips
+  the retry ladder entirely, goes straight to `undeliverable`, and escalates.
+  You would find out, but only after losing a real customer's enquiry.
+
+  The reputation argument for a sending subdomain is real at bulk volumes and
+  irrelevant here: this is low-volume transactional mail, and the From header
+  is read by every customer every week. `enquiries@linwick.co.uk` reads as a
+  business. `enquiries@send.linwick.co.uk` reads as a mailing list.
+
+  Let Resend show you its records. **Read what it actually gives you** — the
+  shape below is the current one, not a promise:
+
+  - CNAME, host `send` → `send.forge.rmta.net`
+  - CNAME, host `rsend` → `rsend.forge.rmta.net`
+  - TXT, host `resend._domainkey` → the DKIM key; this is the one that makes
+    verification pass
 
   Enter each in **Advanced DNS → HOST RECORDS → ADD NEW RECORD**, remembering
-  the Host rule above. Wait for Resend to show **Verified** — usually minutes.
+  the Host rule above: `send`, not `send.linwick.co.uk`, and **not**
+  `send.send`. Wait for Resend to show **Verified** — usually minutes.
 
   **3c. DMARC.** Advanced DNS → ADD NEW RECORD:
 
@@ -361,37 +378,43 @@ automatically.
   `p=none` reports without rejecting, which is what a new sending domain wants.
   Tighten to `p=quarantine` once the W6.4 seed test comes back clean.
 
-  **3d. The two conflicts Namecheap will create. Both are avoidable.**
+  **3d. The two conflicts I warned about do not arise. Verified 5 Sep 2026.**
 
-  **SPF — one record per name, ever.** Two SPF TXT records at the same host is a
-  permanent error and SPF fails *outright*, which is worse than having none.
-  The root already carries the forwarding SPF. If Resend asks for its SPF on
-  host `send`, that is a different name and there is no conflict — leave the
-  root record alone. **Only** if something asks for a second SPF at the root,
-  merge them into one record rather than adding a second:
+  Resend's current setup is **CNAME-based** (`forge.rmta.net`), which delegates
+  SPF and the return-path through those two CNAMEs instead of asking for
+  records at the root. That means:
 
-  ```
-  v=spf1 include:spf.efwd.registrar-servers.com include:amazonses.com ~all
-  ```
+  - **No SPF conflict.** Resend asks for no root SPF, so the existing
+    `v=spf1 include:spf.efwd.registrar-servers.com ~all` stays exactly as it
+    is. Namecheap shows it with a padlock because Mail Settings owns it —
+    leave it locked, do not try to edit it, and do not add a second SPF record
+    at `@`. Two SPF records at one name is a permanent error and SPF fails
+    outright, which is worse than having none.
+  - **No MX conflict.** Resend asks for no MX, so **Mail Settings stays on
+    "Email Forwarding"** and the five `eforward` records stay untouched. You do
+    not need Custom MX, and switching to it would break the forward in §3a for
+    nothing.
 
-  **MX — Namecheap hides these behind "Mail Settings".** In Advanced DNS, MX
-  records live in the **MAIL SETTINGS** section, currently set to **Email
-  Forwarding**, which auto-populates the five `eforward` records and will not
-  let you add your own. If Resend needs an MX on `send`, switch Mail Settings to
-  **Custom MX** — and then **re-enter the forwarding MX by hand**, or the
-  forward from §3a stops working:
+  If a future Resend setup does ask for a root SPF, merge rather than add:
+  `v=spf1 include:spf.efwd.registrar-servers.com include:amazonses.com ~all`.
 
-  | Host | Value | Priority |
+  **3d-fix. If you already added the records under `send.` — clean them up.**
+
+  On 5 Sep 2026 the domain carried a consistent but wrong-target set, from
+  registering `send.linwick.co.uk` in Resend rather than the root:
+
+  | Type | Host | Resolves as |
   |---|---|---|
-  | `@` | `eforward1.registrar-servers.com` | 10 |
-  | `@` | `eforward2.registrar-servers.com` | 10 |
-  | `@` | `eforward3.registrar-servers.com` | 10 |
-  | `@` | `eforward4.registrar-servers.com` | 15 |
-  | `@` | `eforward5.registrar-servers.com` | 20 |
-  | `send` | *(whatever Resend gives you)* | 10 |
+  | CNAME | `send.send` | `send.send.linwick.co.uk` → `send.forge.rmta.net` |
+  | CNAME | `rsend.send` | `rsend.send.linwick.co.uk` → `rsend.forge.rmta.net` |
+  | TXT | `resend._domainkey.send` | DKIM under the subdomain |
 
-  Those five are the exact values live on the domain today. Copy them before
-  you switch, and re-test the forward afterwards.
+  Nothing was mistyped — those are right for the domain that was registered.
+  They are simply authorising a domain the app never sends from. To fix:
+  delete the `send.linwick.co.uk` domain in Resend, add `linwick.co.uk`, enter
+  the new records at root-level hosts per §3b, then delete these three from
+  Namecheap. The `A @ 216.198.79.1` and `CNAME www` records are Vercel's —
+  leave both alone.
 
   **3e. The Vercel variables.** Once Resend shows Verified, create a **sending
   API key** and set, scoped **Production**:
