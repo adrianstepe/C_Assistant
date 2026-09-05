@@ -250,6 +250,150 @@ export async function findSetupRequestSlug(
 }
 
 // ---------------------------------------------------------------------------
+// automatic go-live (provisioning-v1)
+//
+// A tenant goes live when TWO independent facts exist, in either arrival
+// order: a genuinely completed, signature-verified Stripe payment (recorded
+// by the webhook seam), and a submitted onboarding form (the customers row).
+// Neither alone is sufficient, and nothing here weakens how each fact is
+// produced: webhook signatures are still verified upstream, billing events
+// still land through the same de-duplicated insert, and `enabled` is still
+// only ever flipped by a conditional UPDATE that no public endpoint can call
+// with an arbitrary slug.
+
+/** A tenant row as the provisioning seam sees it after flipping it live. */
+export interface EnabledTenant {
+  slug: string;
+  companyName: string;
+  leadRecipientEmail: string;
+}
+
+/**
+ * The event id of a recorded billing event that proves money actually moved,
+ * matching any of the given email addresses case-insensitively, or null.
+ *
+ * "Genuinely paid" mirrors the OrderEvent shapes exactly:
+ *  - `checkout.completed` counts only when `paid` is true — the session can
+ *    complete days before delayed methods (Bacs) collect;
+ *  - `invoice.paid` always counts — Stripe sends it because an invoice was
+ *    settled.
+ * Everything else (expired checkouts, failed payments, subscription state
+ * changes) is not proof of money and never enables anything.
+ */
+export async function findPaidOrderEventId(
+  sql: postgres.Sql,
+  emails: string[],
+): Promise<string | null> {
+  const lowered = emails.map((email) => email.trim().toLowerCase()).filter(Boolean);
+  if (lowered.length === 0) return null;
+  const rows = await sql`
+    select event_id
+    from leads
+    where kind = 'order_event'
+      and (
+        (payload->>'kind' = 'checkout.completed' and payload->>'paid' = 'true')
+        or payload->>'kind' = 'invoice.paid'
+      )
+      and lower(contact_email) = any(${sql.array(lowered)})
+    order by received_at desc
+    limit 1
+  `;
+  return rows[0]?.event_id ?? null;
+}
+
+/**
+ * Flips one tenant live. Returns true only when THIS call did the flipping:
+ * a concurrent webhook-side enablement winning the race resolves quietly to
+ * false, which is why callers must treat false as "already live", not error.
+ */
+export async function enableTenantBySlug(sql: postgres.Sql, slug: string): Promise<boolean> {
+  const rows = await sql`
+    update customers set enabled = true, updated_at = now()
+    where slug = ${slug} and enabled = false
+    returning slug
+  `;
+  return rows.length > 0;
+}
+
+/**
+ * Flips every still-inactive tenant whose lead-recipient email matches one of
+ * the given addresses. Returns exactly the rows this call brought live, so
+ * the caller can audit and announce each one once — a redelivered webhook
+ * finds nothing left to flip and announces nothing.
+ */
+export async function enableTenantsForEmails(
+  sql: postgres.Sql,
+  emails: string[],
+): Promise<EnabledTenant[]> {
+  const lowered = emails.map((email) => email.trim().toLowerCase()).filter(Boolean);
+  if (lowered.length === 0) return [];
+  const rows = await sql`
+    update customers set enabled = true, updated_at = now()
+    where enabled = false
+      and lower(lead_recipient_email) = any(${sql.array(lowered)})
+    returning slug, company_name, lead_recipient_email
+  `;
+  return rows.map((row) => ({
+    slug: row.slug,
+    companyName: row.company_name,
+    leadRecipientEmail: row.lead_recipient_email,
+  }));
+}
+
+/**
+ * One admin-visible audit row for a lifecycle decision made outside the
+ * leads flow itself (automatic go-live, manual pause/resume). De-duplicated
+ * on its synthetic event id like every write to this table, so a retried
+ * webhook cannot write the audit twice either.
+ */
+export async function recordProvisioningAudit(
+  sql: postgres.Sql,
+  entry: {
+    kind: "tenant_enabled" | "admin_override";
+    slug: string;
+    eventId: string;
+    summary: string;
+    payload: Record<string, unknown>;
+  },
+): Promise<void> {
+  await sql`
+    insert into leads (kind, tenant_slug, event_id, status, summary, payload)
+    values (${entry.kind}, ${entry.slug}, ${entry.eventId}, 'applied',
+            ${entry.summary}, ${jsonb(sql, entry.payload)}::jsonb)
+    on conflict (event_id) do nothing
+  `;
+}
+
+/**
+ * The manual override that keeps a human in command of `enabled` now that
+ * payments flip it automatically. Pause is the operation that matters most:
+ * automatic enablement removed the pre-launch review point, so pausing a live
+ * tenant without SQL has to exist somewhere better than a psql prompt.
+ * Writes an audit row naming who acted.
+ */
+export async function setTenantEnabledByAdmin(
+  sql: postgres.Sql,
+  slug: string,
+  enabled: boolean,
+  adminUser: string,
+): Promise<boolean> {
+  const rows = await sql`
+    update customers set enabled = ${enabled}, updated_at = now()
+    where slug = ${slug} and enabled <> ${enabled}
+    returning slug
+  `;
+  if (rows.length === 0) return false;
+  await recordProvisioningAudit(sql, {
+    kind: "admin_override",
+    slug,
+    eventId: `admin_${enabled ? "resume" : "pause"}_${slug}_${Date.now()}`,
+    summary: `${enabled ? "Re-enabled" : "Paused"} by admin (${adminUser})`,
+    payload: { slug, enabled, source: "admin", adminUser },
+  });
+  return true;
+}
+
+// ---------------------------------------------------------------------------
 // shared rate-limit counters
 
 export interface SharedWindowResult {

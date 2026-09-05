@@ -2,6 +2,7 @@ import type { OrderEvent } from "@/lib/stripe/webhook";
 import { readLeadsDatabaseConfig } from "@/lib/db/config";
 import { getLeadsDatabase } from "@/lib/db/client";
 import { ensureSchema, insertOrderEvent } from "@/lib/db/store";
+import { autoEnableAfterVerifiedPayment } from "@/lib/provisioning/auto-enable";
 
 /**
  * Where confirmed billing events go.
@@ -68,6 +69,13 @@ function money(amount: number | undefined, currency: string | undefined): string
  * Records a billing event: always to the log, and to the datastore when one
  * is configured. Throwing here is meaningful: the route turns it into a 500
  * so Stripe retries, rather than silently losing the event.
+ *
+ * After a verified, genuinely-paid event is durably stored, the provisioning
+ * seam gets a chance to bring a matching submitted tenant live. Enablement
+ * failures throw like any other datastore failure (Stripe retries; the
+ * de-duplicated storage makes the replay harmless), while the owner
+ * notification inside that step never propagates — an alerting problem must
+ * not turn a recorded sale into a retry loop.
  */
 export async function record(event: OrderEvent): Promise<void> {
   // Failed payments are the one case that needs a human before the customer
@@ -76,6 +84,19 @@ export async function record(event: OrderEvent): Promise<void> {
   log(`[stripe] ${summarise(event)}`, JSON.stringify(event));
 
   await persist(event);
+  await autoEnableFromRecordedEvent(event);
+}
+
+/**
+ * The provisioning half of `record`, split out for the same reason as
+ * `persist`. Runs only when a datastore is configured — in log-only mode
+ * there is nothing to match a tenant against, exactly as before.
+ */
+async function autoEnableFromRecordedEvent(event: OrderEvent): Promise<void> {
+  const config = readLeadsDatabaseConfig();
+  if (!config) return;
+  const sql = getLeadsDatabase(config);
+  await autoEnableAfterVerifiedPayment(sql, event);
 }
 
 /**

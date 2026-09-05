@@ -1,14 +1,18 @@
 import type { CustomerRow, LeadRow } from "@/lib/db/store";
+import { setTenantEnabledAction } from "@/app/admin/leads/actions";
 
 /**
- * Read-only view over the datastore: stored customers and recent rows from
- * the `leads` table.
+ * View over the datastore: stored customers and recent rows from the `leads`
+ * table.
  *
- * Deliberately a server component with no client-side state and no actions:
- * this panel exists so a human can see what was durably recorded (and later,
- * what enquiries were captured) without tailing logs. Editing happens in the
- * database or the onboarding flow, never here. The CSV prospect tracker below
- * it remains its own tool; this sits alongside rather than replacing it.
+ * A server component with no client-side state. It was strictly read-only
+ * until provisioning-v1; it now carries exactly ONE deliberate write control —
+ * Pause / Re-enable per tenant — because automatic enablement on verified
+ * payment removed the human look that used to happen before launch, and a
+ * compensating control has to live somewhere better than a psql prompt.
+ * Everything else stays read-only: editing still happens in the database or
+ * the onboarding flow, never here. The CSV prospect tracker below it remains
+ * its own tool; this sits alongside rather than replacing it.
  */
 
 const DATE_FORMAT = new Intl.DateTimeFormat("en-GB", {
@@ -55,7 +59,8 @@ export function DatastorePanel({
         <p className="text-muted mt-0.5 text-sm">
           Read straight from the datastore behind{" "}
           <code className="font-mono text-xs">LEADS_DATABASE_URL</code>. Newest
-          first, read-only.
+          first. Tenants can be paused or re-enabled; everything else is
+          read-only.
         </p>
       </div>
 
@@ -77,6 +82,7 @@ export function DatastorePanel({
                 <th className="px-4 py-2 font-medium">Enquiries to</th>
                 <th className="px-4 py-2 font-medium">Live</th>
                 <th className="px-4 py-2 font-medium">Added</th>
+                <th className="px-4 py-2 font-medium">Control</th>
               </tr>
             </thead>
             <tbody>
@@ -94,6 +100,30 @@ export function DatastorePanel({
                   </td>
                   <td className="text-muted px-4 py-2.5 text-xs whitespace-nowrap">
                     {formatWhen(customer.createdAt)}
+                  </td>
+                  <td className="px-4 py-2.5">
+                    {/* The one write control on this panel. Pausing a live
+                        tenant takes its capture page dark immediately; the
+                        action writes an audit row into the events table
+                        below. */}
+                    <form action={setTenantEnabledAction}>
+                      <input type="hidden" name="slug" value={customer.slug} />
+                      <input
+                        type="hidden"
+                        name="intent"
+                        value={customer.enabled ? "pause" : "resume"}
+                      />
+                      <button
+                        type="submit"
+                        className={`cursor-pointer rounded-md border px-2.5 py-1 text-xs font-medium ${
+                          customer.enabled
+                            ? "border-fault-tint text-fault hover:bg-fault-tint/40"
+                            : "border-clear-tint text-clear hover:bg-clear-tint/40"
+                        }`}
+                      >
+                        {customer.enabled ? "Pause" : "Re-enable"}
+                      </button>
+                    </form>
                   </td>
                 </tr>
               ))}
