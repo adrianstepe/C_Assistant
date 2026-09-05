@@ -67,6 +67,41 @@ need only `--db-url`.
 **Then committed as `bd7afd3`:** three claim-vs-code repairs, detailed under
 W1 and W3 below.
 
+### 5 September 2026 — production state, verified by probe
+
+Evidence only. **No ADRIANS TO DO item is ticked here** — those are Adrians' to
+mark. This records what the live deployment answered, so a later session does
+not have to re-derive it.
+
+Black-box probes of `https://www.linwick.co.uk`, plus authoritative DNS reads:
+
+| Probe | Result | Proves |
+|---|---|---|
+| `GET /api/health` | `200` | deployed and serving |
+| `GET /admin/leads` | `401` (was `503`) | `ADMIN_USERNAME` + `ADMIN_PASSWORD` set |
+| `GET /api/email-dispatch` | `401` (was `503`) | **all three** of the secret, `readEmailDeliveryConfig()` and `readLeadsDatabaseConfig()` present — so `LEADS_DATABASE_URL`, `EMAIL_SENDING_ENABLED=true` and `RESEND_API_KEY` are all live |
+| `POST /api/webhooks/resend` | `400` (not `503`) | `RESEND_WEBHOOK_SECRET` set; rejected on signature, as designed |
+| `GET /api/retention` | `401` | `CRON_SECRET` still set |
+| `/checkout/success` | new cancellation copy present, stale Stripe-receipt line absent | commits `bd7afd3`+ are live, not just pushed |
+| `/terms` | "no self-service billing portal" present | same |
+
+The `503 → 401` transitions are the meaningful ones: both routes fail closed on
+missing configuration and only judge credentials once configured, so a `401` is
+positive proof the variables exist rather than an absence of evidence.
+
+DNS on `linwick.co.uk`, read from `dns1.registrar-servers.com` to bypass
+resolver caching: `send` and `rsend` CNAMEs correct (`rsend-euw1` confirms the
+**EU sending region**), DKIM key present at `resend._domainkey`, DMARC valid at
+`v=DMARC1; p=none; rua=mailto:dmarc@linwick.co.uk`, the five `eforward` MX
+intact, and exactly one root SPF. The stale `*.send` records from the earlier
+subdomain setup are gone. `stepedigital.com` carries its own valid DMARC and is
+otherwise untouched.
+
+**Not probeable from outside, still to confirm:** `OWNER_NOTIFICATION_EMAIL`
+(visible as the absence of the red banner once signed in to `/admin/leads`),
+the Neon **region**, whether Resend shows the domain **Verified**, and the two
+Namecheap forwarders.
+
 ---
 
 ## BUILD CHECKLIST
