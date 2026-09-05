@@ -580,7 +580,32 @@ automatically.
      setup submission, the enabled tenant, and the enquiry — the enquiry's
      status reading `sent` (not `pending`, which would mean the Resend webhook
      from step 3.6 is not wired).
-  8. **Refund yourself** in the Stripe dashboard, and cancel the subscription.
+  8. **Refund yourself** in the Stripe dashboard — **and separately cancel the
+     subscription.** A refund does not cancel anything. Refund the invoice and
+     leave the subscription running and Stripe charges the £79 again next
+     month, to a customer who is you.
+
+  **What the test actually costs.** Not the £228 — that comes back. The real
+  cost is the Stripe processing fee, because **Stripe does not return the
+  original payment's fee when you refund it.** On a Latvian account charging
+  GBP and settling EUR, expect roughly:
+
+  | Component | Approx |
+  |---|---|
+  | Processing, EEA card (~1.5% + €0.25) | ~£3.60 |
+  | Processing, UK card instead (~2.5% + €0.25) | ~£5.90 |
+  | GBP→EUR conversion (~2%) | ~£4.60 |
+  | **Total, unrecoverable** | **~£8–11** |
+
+  Confirm the exact rates on your own Stripe dashboard rather than trusting
+  those numbers — pricing varies by account. Either way it is well under £15 to
+  prove the entire delivery chain works, which is the cheapest thing in this
+  plan.
+
+  **Timing.** If you refund the same day, the money never reaches the bank at
+  all: the charge and the refund net out inside the Stripe balance and only the
+  fee is deducted. New Latvian accounts typically hold the first payout ~7-14
+  days anyway. The refund shows on the card statement in **5-10 business days**.
 
   **This is the acceptance test for the entire release.** Nothing else in the
   plan proceeds until it passes: **no further cold email, and no W2 work**,
