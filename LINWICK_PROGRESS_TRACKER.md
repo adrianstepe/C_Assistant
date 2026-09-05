@@ -291,79 +291,138 @@ automatically.
   **Check it worked:** `/admin/leads` stops saying "No datastore configured"
   and shows empty Customers and Leads tables instead.
 
-- [ ] **3. Resend — do all of this in one sitting.**
 
-  1. Create the Resend account and add the domain **`linwick.co.uk`**.
-  2. Resend shows you **SPF** and **DKIM** records. Add both at your DNS host,
-     exactly as given. Wait for Resend to show the domain as **Verified** —
-     usually minutes, occasionally an hour.
-  3. **Add a DMARC record while you are already in the DNS.** You will not want
-     to come back for it, and it materially helps deliverability into Gmail and
-     Microsoft. Start in monitoring mode:
+- [ ] **3. Resend — and the DNS work, which is all on Namecheap.**
 
-     ```
-     Type:  TXT
-     Name:  _dmarc
-     Value: v=DMARC1; p=none; rua=mailto:adrians@stepedigital.com
-     ```
+  **What the DNS actually looks like today** (verified by lookup, 5 Sep 2026 —
+  re-check before trusting it):
 
-     `p=none` reports without rejecting anything, which is what you want while
-     the domain is new. Tighten to `p=quarantine` after the seed test in W6.4
-     shows clean results.
-  4. While in the DNS: add a **forward** for `enquiries@linwick.co.uk` →
-     `adrians@stepedigital.com`. Free at Cloudflare Email Routing or most
-     registrars; ten minutes.
+  | Record | Current value | Means |
+  |---|---|---|
+  | NS | `dns1.registrar-servers.com`, `dns2` | **Namecheap BasicDNS.** All records go in Namecheap's **Advanced DNS** tab, and Namecheap's free Email Forwarding works. |
+  | MX | `eforward1-3` (10), `eforward4` (15), `eforward5` (20) `.registrar-servers.com` | Namecheap's **email-forwarding MX is already in place.** Nothing to add for forwarding — only the rule. |
+  | TXT `@` | `v=spf1 include:spf.efwd.registrar-servers.com ~all` | **An SPF record already exists at the root.** This is the trap from §3d below, live. |
+  | TXT `_dmarc` | *none* | To add. |
+  | TXT `resend._domainkey` | *none* | Resend not set up yet. |
+  | CNAME `www` | `…vercel-dns-017.com` | Vercel serving, as expected. |
 
-     **This is not a prerequisite for sending, and it does not block the
-     acceptance test.** Resend needs DNS control of the domain, not a mailbox
-     on it; hard bounces return as `email.bounced` on the webhook in step 6,
-     and `Reply-To` sends enquirer replies to the customer. The pipeline works
-     with no inbox at all.
+  **The one Namecheap rule that breaks everything if you miss it:** the **Host**
+  field takes the name *without* the domain. `send.linwick.co.uk` is entered as
+  Host `send`. Paste the full name and Namecheap silently creates
+  `send.linwick.co.uk.linwick.co.uk`, which resolves to nothing and gives you
+  an hour of wondering why Resend will not verify. Root records use `@`. TTL:
+  Automatic.
 
-     Do it anyway, because every customer sees `enquiries@linwick.co.uk` in
-     the From header of every enquiry, and today mail to it hard-bounces — a
-     customer asking for a question change, a data-subject request or an abuse
-     report all vanish.
+  ---
 
-     **The one trap:** a domain may have exactly **one** SPF TXT record per
-     name. Two is a permerror and SPF fails outright. Resend normally puts its
-     SPF and return-path MX on a `send.linwick.co.uk` subdomain, so root MX
-     for forwarding should not collide — but read what Resend actually shows
-     you, and if anything wants a second SPF record at the same name, merge the
-     includes into one:
-     `v=spf1 include:_spf.resend.com include:<the other one> ~all`.
-  5. Create a **sending API key** in Resend. On Vercel, scope **Production**:
+  **3a. The email forward — do this first, it is two minutes and conflicts with
+  nothing.**
 
-     ```
-     RESEND_API_KEY=re_...
-     EMAIL_SENDING_ENABLED=true
-     ```
+  Namecheap → **Domain List** → **Manage** on `linwick.co.uk` → **Domain** tab →
+  scroll to **REDIRECT EMAIL** → **ADD FORWARDER**:
 
-     The key alone does nothing. `EMAIL_SENDING_ENABLED` is a deliberate second
-     gate so that a stray credential can never start sending on its own; it
-     must be the literal string `true`.
-  6. Add a **webhook endpoint** in Resend pointing at
-     `https://www.linwick.co.uk/api/webhooks/resend`, subscribed to **all five**
-     of: `email.sent`, `email.delivered`, `email.delivery_delayed`,
-     `email.bounced`, `email.complained`. Copy the endpoint's **signing
-     secret** (`whsec_...`) from Resend's webhook config page:
+  ```
+  Alias:       enquiries
+  Forwards to: adrians@stepedigital.com
+  ```
 
-     ```
-     RESEND_WEBHOOK_SECRET=whsec_...
-     ```
+  Save. The MX records it needs are already there. Send yourself a test from any
+  address to `enquiries@linwick.co.uk` and confirm it lands in the
+  stepedigital.com inbox.
 
-     Without it that route answers `503` and accepts nothing — enquiries would
-     still send, but would stay stuck at `pending` instead of confirming to
-     `sent`.
-  7. Set the owner alert recipient:
+  Not a prerequisite for sending and not part of the acceptance test — see the
+  reasoning in the commit that added this. Do it anyway: every customer sees
+  that address in the From header of every enquiry, and today mail to it
+  bounces.
 
-     ```
-     OWNER_NOTIFICATION_EMAIL=adrians@stepedigital.com
-     ```
+  **3b. Add the domain in Resend.**
 
-     Without it a customer can buy, go live, and nothing tells you.
-     `/admin/leads` shows a red banner naming the missing variable until it is
-     set — that banner disappearing is your confirmation.
+  Create the account, add **`linwick.co.uk`**, and let Resend show you its
+  records. **Read what it actually gives you** — the values below are the usual
+  shape, not a promise, and Resend's regions and record names change:
+
+  - TXT, host `resend._domainkey` — the DKIM key. This is the one that makes
+    verification pass.
+  - TXT, host `send` — an SPF for the bounce subdomain.
+  - MX, host `send` — the bounce feedback address. See §3d.
+
+  Enter each in **Advanced DNS → HOST RECORDS → ADD NEW RECORD**, remembering
+  the Host rule above. Wait for Resend to show **Verified** — usually minutes.
+
+  **3c. DMARC.** Advanced DNS → ADD NEW RECORD:
+
+  ```
+  Type:  TXT Record
+  Host:  _dmarc
+  Value: v=DMARC1; p=none; rua=mailto:adrians@stepedigital.com
+  TTL:   Automatic
+  ```
+
+  `p=none` reports without rejecting, which is what a new sending domain wants.
+  Tighten to `p=quarantine` once the W6.4 seed test comes back clean.
+
+  **3d. The two conflicts Namecheap will create. Both are avoidable.**
+
+  **SPF — one record per name, ever.** Two SPF TXT records at the same host is a
+  permanent error and SPF fails *outright*, which is worse than having none.
+  The root already carries the forwarding SPF. If Resend asks for its SPF on
+  host `send`, that is a different name and there is no conflict — leave the
+  root record alone. **Only** if something asks for a second SPF at the root,
+  merge them into one record rather than adding a second:
+
+  ```
+  v=spf1 include:spf.efwd.registrar-servers.com include:amazonses.com ~all
+  ```
+
+  **MX — Namecheap hides these behind "Mail Settings".** In Advanced DNS, MX
+  records live in the **MAIL SETTINGS** section, currently set to **Email
+  Forwarding**, which auto-populates the five `eforward` records and will not
+  let you add your own. If Resend needs an MX on `send`, switch Mail Settings to
+  **Custom MX** — and then **re-enter the forwarding MX by hand**, or the
+  forward from §3a stops working:
+
+  | Host | Value | Priority |
+  |---|---|---|
+  | `@` | `eforward1.registrar-servers.com` | 10 |
+  | `@` | `eforward2.registrar-servers.com` | 10 |
+  | `@` | `eforward3.registrar-servers.com` | 10 |
+  | `@` | `eforward4.registrar-servers.com` | 15 |
+  | `@` | `eforward5.registrar-servers.com` | 20 |
+  | `send` | *(whatever Resend gives you)* | 10 |
+
+  Those five are the exact values live on the domain today. Copy them before
+  you switch, and re-test the forward afterwards.
+
+  **3e. The Vercel variables.** Once Resend shows Verified, create a **sending
+  API key** and set, scoped **Production**:
+
+  ```
+  RESEND_API_KEY=re_...
+  EMAIL_SENDING_ENABLED=true
+  OWNER_NOTIFICATION_EMAIL=adrians@stepedigital.com
+  ```
+
+  The key alone does nothing. `EMAIL_SENDING_ENABLED` is a deliberate second
+  gate so a stray credential can never start sending on its own, and must be
+  the literal string `true`. Without `OWNER_NOTIFICATION_EMAIL` a customer can
+  buy, go live, and nothing tells you — `/admin/leads` shows a red banner naming
+  the missing variable until it is set, and that banner disappearing is your
+  confirmation.
+
+  **3f. The Resend webhook.** In Resend, add an endpoint at
+  `https://www.linwick.co.uk/api/webhooks/resend`, subscribed to **all five** of
+  `email.sent`, `email.delivered`, `email.delivery_delayed`, `email.bounced`,
+  `email.complained`. Copy the endpoint's signing secret:
+
+  ```
+  RESEND_WEBHOOK_SECRET=whsec_...
+  ```
+
+  Without it that route answers `503` and accepts nothing. Enquiries would still
+  send, but would stay stuck at `pending` instead of confirming to `sent` — and
+  bounces would never be detected at all, which is the whole reason the mailbox
+  in §3a is optional.
+
 
 - [ ] **4. Decide: leave checkout live during this work, or close it.**
 
