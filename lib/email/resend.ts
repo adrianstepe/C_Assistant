@@ -94,7 +94,21 @@ export async function sendLeadEmail(
 /**
  * The verified linwick.co.uk sending identity. Enquiries must come FROM the
  * brand, not from a personal mailbox, and ADR-2 settled this address.
- * Replies do not land here - Reply-To points at the enquirer - but bounces
- * do, which is what makes it worth having as a real, monitored address.
+ *
+ * This needs DNS control of linwick.co.uk, NOT a mailbox on it. Resend
+ * verifies the domain with TXT records and signs with its own DKIM key; the
+ * SMTP return-path is Resend's, so hard bounces come back to us as
+ * `email.bounced` on /api/webhooks/resend and NOT to this address. The whole
+ * delivery pipeline works with no inbox here at all.
+ *
+ * Replies do not land here either - Reply-To carries the enquirer, so a
+ * customer hitting Reply reaches them directly.
+ *
+ * What DOES land here is a human deciding to write to the address they can see
+ * in the From header: a customer asking for a question to be changed, a
+ * data-subject request, an abuse report. Without an inbox or a forward, every
+ * one of those hard-bounces. So this should be a deliverable address - a free
+ * forward to CONTACT_EMAIL is enough - but that is a customer-service
+ * obligation, not a technical prerequisite for sending.
  */
 export const SENDER_ADDRESS = "enquiries@linwick.co.uk";

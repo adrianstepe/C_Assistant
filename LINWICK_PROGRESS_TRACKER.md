@@ -310,10 +310,28 @@ automatically.
      `p=none` reports without rejecting anything, which is what you want while
      the domain is new. Tighten to `p=quarantine` after the seed test in W6.4
      shows clean results.
-  4. While in the DNS: confirm `enquiries@linwick.co.uk` can receive mail, or
-     add a forward to `adrians@stepedigital.com`. Replies from enquirers go
-     straight to the customer via `Reply-To`, so this mailbox only needs to
-     catch bounces — but it does need to catch them.
+  4. While in the DNS: add a **forward** for `enquiries@linwick.co.uk` →
+     `adrians@stepedigital.com`. Free at Cloudflare Email Routing or most
+     registrars; ten minutes.
+
+     **This is not a prerequisite for sending, and it does not block the
+     acceptance test.** Resend needs DNS control of the domain, not a mailbox
+     on it; hard bounces return as `email.bounced` on the webhook in step 6,
+     and `Reply-To` sends enquirer replies to the customer. The pipeline works
+     with no inbox at all.
+
+     Do it anyway, because every customer sees `enquiries@linwick.co.uk` in
+     the From header of every enquiry, and today mail to it hard-bounces — a
+     customer asking for a question change, a data-subject request or an abuse
+     report all vanish.
+
+     **The one trap:** a domain may have exactly **one** SPF TXT record per
+     name. Two is a permerror and SPF fails outright. Resend normally puts its
+     SPF and return-path MX on a `send.linwick.co.uk` subdomain, so root MX
+     for forwarding should not collide — but read what Resend actually shows
+     you, and if anything wants a second SPF record at the same name, merge the
+     includes into one:
+     `v=spf1 include:_spf.resend.com include:<the other one> ~all`.
   5. Create a **sending API key** in Resend. On Vercel, scope **Production**:
 
      ```
