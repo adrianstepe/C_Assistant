@@ -245,6 +245,14 @@ marked done here then.**
   the disabled state is already written and honest, and the funnel produces no
   data worth losing. Your call; note it here either way.
 
+- [ ] **4b. Get this branch deployed.** `main` is committed locally but not
+  pushed — Claude was not asked to push, and pushing `main` is what triggers
+  the Vercel production deploy. Push it (or tell Claude to) once you are ready
+  for the provisioning changes to be live, and confirm the deployment succeeded
+  before step 5. Steps 1-3 can be done before or after; the env vars only take
+  effect on a deployment that comes after they are set, so if you set them last,
+  redeploy.
+
 - [ ] **5. THE ACCEPTANCE TEST — buy your own product in production with a real
   card.** Only once every env var above is set **and** this branch is deployed.
   Walk the whole path and confirm each step:
