@@ -13,8 +13,8 @@ permanent:
 Status keys: `[x]` done · `[~]` partly done · `[ ]` not started ·
 `[!]` blocked on an ADRIANS TO DO item.
 
-**Last updated:** 5 September 2026, after the `stealth-ox/provisioning-v1`
-merge.
+**Last updated:** 6 September 2026 — full re-verification of everything except
+the production card purchase, which Adrians has deferred.
 
 ---
 
@@ -101,6 +101,61 @@ otherwise untouched.
 (visible as the absence of the red banner once signed in to `/admin/leads`),
 the Neon **region**, whether Resend shows the domain **Verified**, and the two
 Namecheap forwarders.
+
+### 6 September 2026 — full re-verification, purchase excluded
+
+Adrians deferred the acceptance test and asked for everything else to be
+checked. Everything below was re-run today, not carried over from yesterday.
+
+**Repository and harnesses** (local portable Postgres on `127.0.0.1:54329`,
+started and stopped for this run):
+
+| Check | Result |
+|---|---|
+| `npm run typecheck` | clean |
+| `npm run lint` | clean |
+| `verify-phase1` | **24 passed** |
+| `verify-phase2` | **36 passed** |
+| `verify-phase2-browser` | **31 passed** |
+| `verify-phase3` | **41 passed** |
+| `verify-provisioning` | **33 passed** |
+| `journey-check` | **JOURNEY COMPLETE** — every step held (20 assertions plus 2 informational; the "21/21" in yesterday's entry and in the launch plan counts steps, not assertions) |
+
+Working tree clean of tracked changes; `main` level with `origin/main` at
+`0f64065`.
+
+**Production** — `https://www.linwick.co.uk`:
+
+| Probe | Result |
+|---|---|
+| `GET /api/health` | `200` |
+| `GET /pricing` | `200` — checkout still open |
+| `https://linwick.co.uk/` | `308` to `www`, as `brand.ts` documents |
+| `GET /admin/leads` | `401` |
+| `GET /api/email-dispatch` | `401` |
+| `GET /api/retention` | `401` |
+| `POST /api/webhooks/resend` | `400` |
+
+**DNS**, read from the authoritative nameserver and cross-checked against
+public resolvers:
+
+| Record | Value |
+|---|---|
+| `send.linwick.co.uk` | `send.forge.rmta.net` |
+| `rsend.linwick.co.uk` | `rsend-euw1.forge.rmta.net` (EU region) |
+| `www.linwick.co.uk` | Vercel |
+| `resend._domainkey.linwick.co.uk` | full RSA key |
+| `_dmarc.linwick.co.uk` | `v=DMARC1; p=none; rua=mailto:dmarc@linwick.co.uk` |
+| `linwick.co.uk` TXT | one SPF, forwarding include intact |
+| `linwick.co.uk` MX | five `eforward` records |
+| `_dmarc.stepedigital.com` | `v=DMARC1; p=none; rua=mailto:adrians@stepedigital.com` |
+
+Yesterday's DMARC cache lag has cleared: `8.8.8.8` and `1.1.1.1` both now serve
+the correct record.
+
+**Nothing failed.** Every check that can be run without buying the product
+passes. What remains unproven is precisely and only what the purchase proves:
+that the four steps chain together in production for a stranger's card.
 
 ---
 
