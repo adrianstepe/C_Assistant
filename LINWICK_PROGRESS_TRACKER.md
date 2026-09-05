@@ -322,11 +322,11 @@ automatically.
   scroll to **REDIRECT EMAIL** → **ADD FORWARDER**:
 
   ```
-  Alias:       enquiries
-  Forwards to: adrians@stepedigital.com
+  Alias:       enquiries      Forwards to: adrians@stepedigital.com
+  Alias:       dmarc          Forwards to: adrians@stepedigital.com
   ```
 
-  Save. The MX records it needs are already there. Send yourself a test from any
+  The second one receives the DMARC aggregate reports from §3c. Save. The MX records it needs are already there. Send yourself a test from any
   address to `enquiries@linwick.co.uk` and confirm it lands in the
   stepedigital.com inbox.
 
@@ -371,12 +371,36 @@ automatically.
   ```
   Type:  TXT Record
   Host:  _dmarc
-  Value: v=DMARC1; p=none; rua=mailto:adrians@stepedigital.com
+  Value: v=DMARC1; p=none; rua=mailto:dmarc@linwick.co.uk
   TTL:   Automatic
   ```
 
-  `p=none` reports without rejecting, which is what a new sending domain wants.
-  Tighten to `p=quarantine` once the W6.4 seed test comes back clean.
+  `p=none` publishes a policy without rejecting anything, which is what a new
+  sending domain wants. Tighten to `p=quarantine` once the W6.4 seed test comes
+  back clean.
+
+  **The `rua=` is not optional, and it is the half that is easy to leave off.**
+  `p=none` with no `rua` is monitoring with the monitor switched off: a policy
+  is published, no reports are sent anywhere, and you learn nothing about
+  whether your mail is passing SPF and DKIM alignment. That knowledge is the
+  entire reason to sit at `p=none` before tightening. (This is exactly what
+  happened on 5 Sep 2026 — the record went in as `v=DMARC1; p=none;` and had
+  to be edited.)
+
+  **Why `dmarc@linwick.co.uk` and not the stepedigital address.** Under RFC
+  7489 §7.1, pointing `rua` at a mailbox on a DIFFERENT domain is an external
+  destination, and the receiving domain must publish a record authorising it
+  before Google, Microsoft and Yahoo will send anything:
+
+  ```
+  at stepedigital.com:  TXT  linwick.co.uk._report._dmarc  =  v=DMARC1
+  ```
+
+  Keeping `rua` on linwick.co.uk avoids that entirely — same domain, no
+  authorisation needed, and nothing on stepedigital.com has to change. Add a
+  second forwarder in §3a (`dmarc` → `adrians@stepedigital.com`) and the
+  reports land in the same inbox anyway. Both routes work; this one is fewer
+  moving parts in a place nobody will look again for a year.
 
   **3d. The two conflicts I warned about do not arise. Verified 5 Sep 2026.**
 
