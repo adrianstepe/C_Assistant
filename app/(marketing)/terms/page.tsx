@@ -151,6 +151,18 @@ export default function TermsPage() {
             {PRODUCT_NAME} continues to run until the end of the month you have
             already paid for. After that, no further payments are taken.
           </p>
+          <p>
+            To cancel, email{" "}
+            <a
+              href={`mailto:${BRAND.contactEmail}`}
+              className="rounded-md font-medium text-ink underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            >
+              {BRAND.contactEmail}
+            </a>{" "}
+            and say so. There is no self-service billing portal and no account
+            to log into; one email is the whole process, and we confirm it in
+            writing.
+          </p>
           <p className="border-hairline bg-mist rounded-lg border px-4 py-3 text-sm">
             <strong className="font-semibold text-ink">Refunds.</strong> If{" "}
             {PRODUCT_NAME} is not live on your site, you can have the{" "}

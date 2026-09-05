@@ -61,6 +61,27 @@ export function ownerNotificationGateReason(): string {
 }
 
 /**
+ * Key-free view of the two gates, for the admin panel. Pages and panels read
+ * this; they must not read the config itself, which carries the API key — the
+ * same rule as `isEmailSendingEnabled()`.
+ *
+ * `announce()` in lib/provisioning/auto-enable.ts already warns loudly at the
+ * moment a suppressed alert costs something. But that warning lands in a
+ * Vercel log nobody is watching, and only AFTER a sale has gone unannounced.
+ * Surfacing the same fact on /admin/leads makes a closed gate discoverable
+ * before it costs anything, which is the only time it is cheap to fix.
+ */
+export function ownerNotificationStatus(): {
+  armed: boolean;
+  /** Which gate is closed. Null when the alert is armed. */
+  reason: string | null;
+} {
+  const config = readOwnerNotificationConfig();
+  if (config) return { armed: true, reason: null };
+  return { armed: false, reason: ownerNotificationGateReason() };
+}
+
+/**
  * Sends one owner notification. NEVER throws and NEVER affects the caller's
  * outcome: the sale is already recorded and the tenant already live by the
  * time this runs, and an alerting outage must not turn a paid webhook into a

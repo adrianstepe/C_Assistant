@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BRAND } from "@/lib/marketing/brand";
-import { MONTHLY_FEE_LABEL, SETUP_FEE_LABEL } from "@/lib/pricing";
+import { MONTHLY_FEE_LABEL, PRODUCT_NAME, SETUP_FEE_LABEL } from "@/lib/pricing";
 import { readStripeConfig } from "@/lib/stripe/config";
 import { retrieveCheckoutSession } from "@/lib/stripe/checkout";
 import type { CheckoutSummary } from "@/lib/stripe/checkout";
@@ -35,8 +35,12 @@ export default async function CheckoutSuccessPage({
   const sessionId = firstParam(params.session_id);
   const isPreview = firstParam(params.preview) === "1";
 
-  // Confirm the payment server-side rather than trusting the redirect. No
-  // webhook exists yet, so this is the only verification point.
+  // Confirm the payment server-side rather than trusting the redirect. The
+  // signature-verified webhook (app/api/stripe/webhook) is what durably records
+  // the sale and lets provisioning flip the tenant live; this lookup exists
+  // because that webhook is asynchronous and may not have landed by the time
+  // Stripe redirects the customer here. It decides what this page SAYS, never
+  // what gets provisioned.
   let summary: CheckoutSummary | null = null;
   if (sessionId) {
     const config = readStripeConfig();
@@ -154,7 +158,10 @@ export default async function CheckoutSuccessPage({
         >
           {BRAND.contactEmail}
         </a>
-        . You can cancel any time from the link in your Stripe receipt.
+        . To cancel, email that same address and we&rsquo;ll stop the
+        subscription &mdash; no minimum term, no notice period, no cancellation
+        fee, and {PRODUCT_NAME} keeps running until the end of the month you
+        have already paid for.
       </p>
     </Container>
   );

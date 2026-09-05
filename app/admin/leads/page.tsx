@@ -6,6 +6,7 @@ import { loadProspectsFromFile } from "@/lib/prospects/source";
 import { readLeadsDatabaseConfig } from "@/lib/db/config";
 import { getLeadsDatabase } from "@/lib/db/client";
 import { ensureSchema, listCustomers, listRecentLeads } from "@/lib/db/store";
+import { ownerNotificationStatus } from "@/lib/email/owner-notification";
 
 export const metadata: Metadata = {
   title: "Prospect tracker",
@@ -52,8 +53,32 @@ export default async function AdminLeadsPage() {
   const { prospects, errors } = await loadProspectsFromFile(today);
   const stored = await loadStoredRecords();
 
+  // Automatic provisioning removed the human look before launch, so the owner
+  // alert is now the ONLY thing that says "someone bought". When its gate is
+  // closed the alert suppresses itself; auto-enable.ts logs that loudly, but
+  // only once a sale has already gone unannounced. Say it here first.
+  const alerting = ownerNotificationStatus();
+
   return (
     <div className="flex flex-col gap-8">
+      {alerting.armed ? null : (
+        <div
+          role="status"
+          className="border-fault-tint bg-fault-tint rounded-lg border px-4 py-3 text-sm"
+        >
+          <p className="font-medium">
+            No one is being told when a customer buys.
+          </p>
+          <p className="text-slate-body mt-1">
+            A verified payment still enables the tenant and still writes an
+            audit row below &mdash; but the owner notification suppresses
+            itself, because{" "}
+            <code className="font-mono text-xs">{alerting.reason}</code>. Set it
+            on the deployment and redeploy; nothing else changes.
+          </p>
+        </div>
+      )}
+
       {stored.state === "ready" ? (
         <DatastorePanel customers={stored.customers} leads={stored.leads} />
       ) : stored.state === "error" ? (
